@@ -50,7 +50,6 @@ logs/
 
 # Modelos treinados
 *.pt
-*.pth
 *.ckpt
 *.onnx
 *.h5
