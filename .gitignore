@@ -58,10 +58,6 @@ logs/
 *.pkl
 *.joblib
 
-# Checkpoints
-checkpoints/
-models/
-weights/
 
 # TensorBoard
 runs/
