@@ -78,26 +78,70 @@ class Agent:
     def play_and_evaluate(self):
 
         # Ira rodar uma partida headless e ver o desemepnho
-        game = SnakeGameAI() 
+        game = SnakeGameAI()  # Nova partida
         steps = 0
         steps_since_food = 0
         max_steps_without_food = MAX_STEPS_WITHOUT_FOOD
 
         while True:
             state = self.get_state(game)
-            action = self.get_action(state)
+            action = self.get_action(state) # Vai pra rede neural
             reward, done, score = game.play_step(action)
 
             steps += 1
 
-            if reward > 0:
+            if reward > 0: # Se comeu a comida
                 steps_since_food = 0
                 max_steps_without_food = MAX_STEPS_WITHOUT_FOOD
-            else:
+            else: 
                 steps_since_food += 1
-            if steps_since_food > max_steps_without_food:
+            if steps_since_food > max_steps_without_food: # Evitar LOOP
                 done = True
-            if done:
+            if done: # Fim game
                 self.score = score
-                self.fitness = (score ** 2) * 100 + steps
+                self.fitness = (score ** 2) * 100 + steps # Dando mais importancia para o score, mas tambem para os passos
                 return self.fitness,score
+
+    # Manipular Pesos
+    # Tem os mesmo pesos mas sao objetos diferentes
+    def clone(self):
+        child = Agent(model=self.model.clone())
+        return child
+
+    # Operadores Geneticos
+
+    @staticmethod
+    def crossover(parent_a: "Agent", parent_b: "Agent") -> "Agent":
+        # Pega os Pesos dos pais
+        wa = parent_a.model.get_flat_weights()
+        wb = parent_b.model.get_flat_weights()
+        # Cria numeros aleatorios entre 1 e 0, com o tamanho de "wa", e transforma em Bool
+        mask = torch.rand_like(wa) < 0.5 
+        # Se for true pega A se for false pega B
+        child_weights = torch.where(mask, wa, wb) 
+        child = Agent()
+        child.model.set_flat_weights(child_weights) # Pefa A + B e coloca na rede
+        return child 
+
+    def mutate(self):
+        weights = self.model.get_flat_weights()
+        # Decide quais pessos irao sofrem mutacao
+        mask = torch.rand_like(weights) < MUTATION_RATE
+        # Gera um ruido aleatorio 
+        noise = torch.randn_like(weights) * MUTATION_STRENGTH
+        weights[mask] += noise[mask] # Aplica o Ruido nos pesos que foram selecionados
+        self.model.set_flat_weights(weights)
+
+    # Checkpoint
+
+    def save_checkpoint(self, generation, record):
+        self.model.save_checkpoint(generation, record)
+
+    @staticmethod
+    def load_checkpoint():
+        model = Linear_QNet(11,256,3)
+        generation, record = model.load_checkpoint()
+        if generation == 0 and record == 0:
+            return None, 0, 0
+        agent = Agent(model=model)
+        return agent, generation, record    
