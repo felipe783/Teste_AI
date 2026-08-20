@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 from Teste_IA.SnakeGameAI.Geral.snake_gameai import SnakeGameAI, Direction, Point, BLOCK_SIZE
-from model import Linear_QNet  
+from model import DEVICE, Linear_QNet  
 
 
 # Paramentros geneticos
@@ -61,3 +61,13 @@ class Agent:
                 game.food.y > game.head.y,
             ]
             return np.array(state, dtype=np.float32) # Transforma o estado em um array, para ser usado na rede neural
+
+    @torch.no_grad() # Nao precisa calcular o gradiente
+    def get_action(self, state):  
+        # Um tensor pode ter qualquer quantidade de dimensao  
+        state0 = torch.tensor(state,  dtype=torch.float32).to(DEVICE) # Transforma o array pro tensor
+        prediction = self.model(state0) # Oq retornar da Rede
+        move = torch.argmax(prediction).item() # Pega o valor max, e transforma em um numero inteiro
+        final_move = [0, 0, 0] 
+        final_move[move] = 1 
+        return final_move
