@@ -10,7 +10,8 @@ DEVICE = torch.device("cpu")
 torch.set_num_threads(1)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.join(BASE_DIR, "Models", "Models_GA")
+MODEL_DIR = os.path.join(BASE_DIR, "Models")
+LOG_DIR = os.path.join(BASE_DIR, "Log")
 
 # Rede Neural
 # nn.Module é a classe base para todas as redes neurais do PyTorch.
@@ -63,12 +64,10 @@ class Linear_QNET(nn.Module):
         return child
 
     # Salvar o modelo da geracao
-    def save_checkpoint(self, generation, record, filename="best_genetic.pth"):
+    def save_checkpoint(self, generation, record):
         os.makedirs(MODEL_DIR, exist_ok=True)
 
-        if filename is None:
-            filename = f"generation_{generation:03d}.pth"
-
+        filename = f"generation_{generation:03d}.pth"
         filepath = os.path.join(MODEL_DIR, filename)
 
         checkpoint = {
@@ -113,8 +112,8 @@ class Linear_QNET(nn.Module):
             mutation_strength,
             elapsed_time
         ):
-        os.makedirs(MODEL_DIR, exist_ok=True)
-        filepath = os.path.join(MODEL_DIR, "history.json")
+        os.makedirs(LOG_DIR, exist_ok=True)
+        filepath = os.path.join(LOG_DIR, "history.json")
 
         if os.path.exists(filepath):
             with open(filepath, "r", encoding="utf-8") as file:
