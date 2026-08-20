@@ -101,17 +101,19 @@ class Linear_QNET(nn.Module):
 
 
     def save_generation_log(
-            self, 
-            generation,
-            best_score, 
-            best_fitness,
-            average_score,
-            average_fitness,
-            population_size,
-            mutation_rate,
-            mutation_strength,
-            elapsed_time
-        ):
+        self,
+        generation,
+        best_score,
+        best_fitness,
+        average_score,
+        average_fitness,
+        population_size,
+        mutation_rate,
+        mutation_strength,
+        elapsed_time,
+        population
+    ):
+
         os.makedirs(LOG_DIR, exist_ok=True)
         filepath = os.path.join(LOG_DIR, "history.json")
 
@@ -121,6 +123,17 @@ class Linear_QNET(nn.Module):
         else:
             history = []
 
+        # Desempenho de cada indivíduo
+        individuals_data = []
+
+        for i, agent in enumerate(population):
+            individuals_data.append({
+                "id": i,
+                "score": agent.score,
+                "fitness": agent.fitness
+            })
+
+        # Dados da geração
         generation_data = {
             "generation": generation,
             "best_score": best_score,
@@ -130,10 +143,11 @@ class Linear_QNET(nn.Module):
             "population_size": population_size,
             "mutation_rate": mutation_rate,
             "mutation_strength": mutation_strength,
-            "elapsed_time": elapsed_time
+            "elapsed_time": elapsed_time,
+            "individuals": individuals_data
         }
 
         history.append(generation_data)
 
-        with open(filepath,"w",encoding="utf-8") as file:
-            json.dump(history,file,indent=4)
+        with open(filepath, "w", encoding="utf-8") as file:
+            json.dump(history, file, indent=4)

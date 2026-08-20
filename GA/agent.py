@@ -62,6 +62,7 @@ class Agent:
             ]
             return np.array(state, dtype=np.float32) # Transforma o estado em um array, para ser usado na rede neural
 
+    #Acao
     @torch.no_grad() # Nao precisa calcular o gradiente
     def get_action(self, state):  
         # Um tensor pode ter qualquer quantidade de dimensao  
@@ -71,3 +72,32 @@ class Agent:
         final_move = [0, 0, 0] 
         final_move[move] = 1 
         return final_move
+
+    #Avaliacao
+
+    def play_and_evaluate(self):
+
+        # Ira rodar uma partida headless e ver o desemepnho
+        game = SnakeGameAI() 
+        steps = 0
+        steps_since_food = 0
+        max_steps_without_food = MAX_STEPS_WITHOUT_FOOD
+
+        while True:
+            state = self.get_state(game)
+            action = self.get_action(state)
+            reward, done, score = game.play_step(action)
+
+            steps += 1
+
+            if reward > 0:
+                steps_since_food = 0
+                max_steps_without_food = MAX_STEPS_WITHOUT_FOOD
+            else:
+                steps_since_food += 1
+            if steps_since_food > max_steps_without_food:
+                done = True
+            if done:
+                self.score = score
+                self.fitness = (score ** 2) * 100 + steps
+                return self.fitness,score
