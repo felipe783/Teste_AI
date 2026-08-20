@@ -2,7 +2,7 @@ import torch
 import random
 import numpy as np
 from collections import deque
-from snake_gameai import (
+from Teste_IA.SnakeGameAI.Geral.snake_gameai import (
     SnakeGameAI,
     Direction,
     Point,
