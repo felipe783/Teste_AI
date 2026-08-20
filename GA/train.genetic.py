@@ -1,6 +1,8 @@
 import random
+import time
 from SnakeGameAI.GA.agent import Agent
 from SnakeGameAI.DQN.Helper import plot
+
 
 POPULATION_SIZE = 80 
 GENERATIONS = 500
@@ -44,11 +46,18 @@ def train():
     population = [Agent() for _ in range(POPULATION_SIZE)]
     if seed_agent is not None:
         population[0] = seed_agent
-
-    generation = start_gem
+        print(
+            f"Genética anterior carregada "
+            f"(geração {start_gen}, recorde {record})"
+        )
+    generation = start_gen
 
     try:
         for generation in range(start_gen, start_gen + GENERATIONS):
+
+            # Inicio Geracao
+            gen_start_time = time.time()
+            
             gen_best_score = 0
 
             for agent in population:
@@ -62,6 +71,13 @@ def train():
 
             best_in_gen = max(population, key=lambda a: a.fitness)
 
+            # Medias
+            average_score = (sum(agent.score for agent in population)/ len(population))
+
+            average_fitness = (sum(agent.fitness for agent in population)/ len(population))
+
+            elapsed_time = (time.time() - gen_start_time)
+
             if best_in_gen.score > record:
                 record = best_in_gen.score
                 print(f'Novo recorde: {record} (geração {generation})')
@@ -74,6 +90,19 @@ def train():
                 'Fitness top:', round(best_in_gen.fitness, 1)
             )
 
+            best_in_gen.save_generation_log(
+                            generation=generation,
+                            best_score=best_in_gen.score,
+                            best_fitness=best_in_gen.fitness,
+                            average_score=average_score,
+                            average_fitness=average_fitness,
+                            population_size=len(population),
+                            mutation_rate=best_in_gen.mutation_rate,
+                            mutation_strength=best_in_gen.mutation_strength,
+                            elapsed_time=elapsed_time,
+                            population=population
+                        )
+            
             plot(plot_scores, plot_mean_scores)
             population = next_generation(population)
 

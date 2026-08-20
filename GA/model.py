@@ -68,6 +68,7 @@ class Linear_QNET(nn.Module):
         os.makedirs(MODEL_DIR, exist_ok=True)
 
         filename = f"generation_{generation:03d}.pth"
+
         filepath = os.path.join(MODEL_DIR, filename)
 
         checkpoint = {
@@ -77,6 +78,10 @@ class Linear_QNET(nn.Module):
         }
 
         torch.save(checkpoint, filepath)
+
+        best_filepath = os.path.join(MODEL_DIR, "best_genetic.pth")
+        torch.save(checkpoint, best_filepath)
+
         print(f"Melhor Genetica da Geracao {generation}")
         print(f"Checkpoint salvo em: {filepath}")
 
