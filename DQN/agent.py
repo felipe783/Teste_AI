@@ -13,7 +13,7 @@ from model import (
     QTrainer,
     DEVICE
 )
-from Helper import plot
+from Teste_IA.SnakeGameAI.Geral.Helper import plot
 
 
 MAX_MEMORY = 100_000

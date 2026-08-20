@@ -1,7 +1,7 @@
 import random
 import time
 from SnakeGameAI.GA.agent import Agent
-from SnakeGameAI.DQN.Helper import plot
+from SnakeGameAI.Geral.Helper import plot
 
 
 POPULATION_SIZE = 80 

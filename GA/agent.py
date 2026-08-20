@@ -1,9 +1,8 @@
 import numpy as np
 import torch
 
-from Teste_IA.SnakeGameAI.Geral.snake_gameai import SnakeGameAI, Direction, Point, BLOCK_SIZE
-from model import DEVICE, Linear_QNet  
-
+from SnakeGameAI.Geral.snake_gameai import SnakeGameAI, Direction, Point, BLOCK_SIZE
+from SnakeGameAI.GA.model import DEVICE, Linear_QNET
 
 # Paramentros geneticos
 MUTATION_RATE = 0.15 # % dos pesos que sofrem mutação em cada filho
@@ -11,8 +10,8 @@ MUTATION_STRENGTH = 0.30 # Desvio padrão do ruído gaussiano aplicado
 MAX_STEPS_WITHOUT_FOOD = 100
 
 class Agent:
-    def __init__(self, model: Linear_QNet = None):
-        self.model = model if model is not None else Linear_QNet(11,256,3) #Cria a Rede
+    def __init__(self, model: Linear_QNET = None):
+        self.model = model if model is not None else Linear_QNET(11,256,3) #Cria a Rede
         self.fitness = 0.0 # Desempenho do Individuo
         self.score = 0 
 
@@ -139,7 +138,7 @@ class Agent:
 
     @staticmethod
     def load_checkpoint():
-        model = Linear_QNet(11,256,3)
+        model = Linear_QNET(11,256,3)
         generation, record = model.load_checkpoint()
         if generation == 0 and record == 0:
             return None, 0, 0
