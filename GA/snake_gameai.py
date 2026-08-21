@@ -1,20 +1,6 @@
-import pygame
 import random
 from enum import Enum
 from collections import namedtuple
-import numpy as np
-import os
-import cv2
-import math
-
-pygame.init()
-font = pygame.font.Font(None, 25)
-
-# Reset 
-# Reward
-# Play(action) -> Direction
-# Game_Iteration
-# is_collision
 
 
 class Direction(Enum):
@@ -24,71 +10,25 @@ class Direction(Enum):
     DOWN = 4
 
 
-Point = namedtuple('Point', 'x , y')
+Point = namedtuple('Point', 'x y')
 
 BLOCK_SIZE = 20
-SPEED = 1000
-VIDEO_SPEED = 60
-WHITE = (255, 255, 255)
-RED = (200, 0, 0)
-BLUE1 = (0, 0, 255)
-BLUE2 = (0, 100, 255)
-BLACK = (0, 0, 0)
 
 
 class SnakeGameAI:
+
     def __init__(self, w=640, h=480):
-        self.record = 0
-        self.video_frames = []
         self.w = w
         self.h = h
 
-        # init display
-        self.display = pygame.display.set_mode((self.w, self.h))
-        pygame.display.set_caption('Snake')
-        self.clock = pygame.time.Clock()
-
-        # init game state
         self.reset()
-
-    def save_video(self, score, record):
-        if not self.video_frames:
-            return
-
-        os.makedirs("videos", exist_ok=True)
-
-        filename = f"videos/snake_game_score_{score}_record_{record}.mp4"
-
-        height, width, _ = self.video_frames[0].shape
-
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-
-        writer = cv2.VideoWriter(
-            filename,
-            fourcc,
-            VIDEO_SPEED,
-            (width, height)
-        )
-
-        for frame in self.video_frames:
-            writer.write(frame)
-
-        writer.release()
-
-        print(f"Video saved as {filename}")
-
-    def capture_frame(self):
-        frame = pygame.surfarray.array3d(self.display)
-        frame = np.transpose(frame, (1, 0, 2))
-        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        self.video_frames.append(frame)
 
     def reset(self):
         self.direction = Direction.RIGHT
 
         self.head = Point(
-            self.w / 2,
-            self.h / 2
+            self.w // 2,
+            self.h // 2
         )
 
         self.snake = [
@@ -98,122 +38,50 @@ class SnakeGameAI:
         ]
 
         self.score = 0
-        self.food = None
-        self._place__food()
         self.frame_iteration = 0
 
-        self.video_frames = []
+        self._place_food()
 
-    def _place__food(self):
-        x = random.randint(
-            0,
-            (self.w - BLOCK_SIZE) // BLOCK_SIZE
-        ) * BLOCK_SIZE
-
-        y = random.randint(
-            0,
-            (self.h - BLOCK_SIZE) // BLOCK_SIZE
-        ) * BLOCK_SIZE
+    def _place_food(self):
+        x = random.randint(0,(self.w - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
+        y = random.randint(0,(self.h - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
 
         self.food = Point(x, y)
 
         if self.food in self.snake:
-            self._place__food()
+            self._place_food()
 
     def play_step(self, action):
-        self._update_ui()
-        self.capture_frame()
+
         self.frame_iteration += 1
 
-        # 1. Collect the user input
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-
-        # 2. Move
+        # Move
         self._move(action)
         self.snake.insert(0, self.head)
 
-        # 3. Check if game Over
+        # Collision
         reward = 0
         game_over = False
 
-        if (
-            self.is_collision()
-            or self.frame_iteration > 100 * len(self.snake)
-        ):
+        if (self.is_collision()or self.frame_iteration > 100 * len(self.snake)):
             game_over = True
             reward = -10
+
             return reward, game_over, self.score
 
-        # 4. Place new Food or just move
+        # Food
         if self.head == self.food:
             self.score += 1
             reward = 10
-            self._place__food()
+
+            self._place_food()
 
         else:
             self.snake.pop()
 
-        # 5. Update UI and clock
-        self._update_ui()
-        self.clock.tick(SPEED)
-
-        # 6. Return game Over and Display Score
         return reward, game_over, self.score
 
-    def _update_ui(self):
-        self.display.fill(BLACK)
-
-        for pt in self.snake:
-            pygame.draw.rect(
-                self.display,
-                BLUE1,
-                pygame.Rect(
-                    pt.x,
-                    pt.y,
-                    BLOCK_SIZE,
-                    BLOCK_SIZE
-                )
-            )
-
-            pygame.draw.rect(
-                self.display,
-                BLUE2,
-                pygame.Rect(
-                    pt.x + 4,
-                    pt.y + 4,
-                    12,
-                    12
-                )
-            )
-
-        pygame.draw.rect(
-            self.display,
-            RED,
-            pygame.Rect(
-                self.food.x,
-                self.food.y,
-                BLOCK_SIZE,
-                BLOCK_SIZE
-            )
-        )
-
-        text = font.render(
-            "Score: " + str(self.score),
-            True,
-            WHITE
-        )
-
-        self.display.blit(text, [0, 0])
-        pygame.display.flip()
-
     def _move(self, action):
-        # Action
-        # [1,0,0] -> Straight
-        # [0,1,0] -> Right Turn 
-        # [0,0,1] -> Left Turn
 
         clock_wise = [
             Direction.RIGHT,
@@ -224,16 +92,14 @@ class SnakeGameAI:
 
         idx = clock_wise.index(self.direction)
 
-        if np.array_equal(action, [1, 0, 0]):
+        if action == [1, 0, 0]:
             new_dir = clock_wise[idx]
 
-        elif np.array_equal(action, [0, 1, 0]):
-            next_idx = (idx + 1) % 4
-            new_dir = clock_wise[next_idx]
+        elif action == [0, 1, 0]:
+            new_dir = clock_wise[(idx + 1) % 4]
 
         else:
-            next_idx = (idx - 1) % 4
-            new_dir = clock_wise[next_idx]
+            new_dir = clock_wise[(idx - 1) % 4]
 
         self.direction = new_dir
 
@@ -255,10 +121,11 @@ class SnakeGameAI:
         self.head = Point(x, y)
 
     def is_collision(self, pt=None):
+
         if pt is None:
             pt = self.head
 
-        # hit boundary
+        # Parede
         if (
             pt.x > self.w - BLOCK_SIZE
             or pt.x < 0
@@ -267,6 +134,7 @@ class SnakeGameAI:
         ):
             return True
 
+        # Corpo
         if pt in self.snake[1:]:
             return True
 

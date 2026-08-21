@@ -1,17 +1,19 @@
+import os
+import csv
 import torch
 import random
 import numpy as np
 
 from collections import deque
 
-from Teste_IA.SnakeGameAI.DQN.snake_gameai import (
+from snake_gameai import (
     SnakeGameAI,
     Direction,
     Point,
     BLOCK_SIZE
 )
 
-from Teste_IA.SnakeGameAI.Server.DQN_Server.DQN.model import (
+from model import (
     Linear_QNet,
     QTrainer,
     DEVICE
@@ -26,29 +28,32 @@ MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
 LR = 0.001
 
+MODEL_DIR = "Models"
+MODEL_PATH = os.path.join(
+    MODEL_DIR,
+    "model.pth"
+)
+
+LOG_DIR = "logs"
+LOG_FILE = os.path.join(
+    LOG_DIR,
+    "training_log.csv"
+)
+
 
 # ============================================================
-# LOG
+# LOGGER
 # ============================================================
-
-LOG_FILE = "logs/training_log.csv"
-
 
 class TrainingLogger:
 
     def __init__(self):
 
-        import os
-        import csv
-
-        self.csv = csv
-        self.os = os
-
         self.total_games = 0
         self.record = 0
 
         os.makedirs(
-            "logs",
+            LOG_DIR,
             exist_ok=True
         )
 
@@ -83,7 +88,7 @@ class TrainingLogger:
             score
         )
 
-        file_exists = self.os.path.exists(
+        file_exists = os.path.exists(
             LOG_FILE
         )
 
@@ -94,7 +99,7 @@ class TrainingLogger:
             encoding="utf-8"
         ) as file:
 
-            writer = self.csv.writer(file)
+            writer = csv.writer(file)
 
             if not file_exists:
 
@@ -116,7 +121,8 @@ class TrainingLogger:
             f"Partida: {self.total_games} | "
             f"Score: {score} | "
             f"Max: {self.record} | "
-            f"Total: {self.total_games}"
+            f"Total: {self.total_games}",
+            flush=True
         )
 
 
@@ -129,32 +135,172 @@ class Agent:
     def __init__(self):
 
         self.n_game = 0
-
         self.record = 0
 
+        # ----------------------------------------------------
         # Exploração
+        # ----------------------------------------------------
+
         self.epsilon = 80
 
+        # ----------------------------------------------------
         # Desconto futuro
+        # ----------------------------------------------------
+
         self.gamma = 0.9
 
+        # ----------------------------------------------------
         # Replay memory
+        # ----------------------------------------------------
+
         self.memory = deque(
             maxlen=MAX_MEMORY
         )
 
+        # ----------------------------------------------------
         # Modelo
+        # ----------------------------------------------------
+
         self.model = Linear_QNet(
             11,
             256,
             3
         )
 
+        # ----------------------------------------------------
         # Trainer
+        # ----------------------------------------------------
+
         self.trainer = QTrainer(
             self.model,
             lr=LR,
             gamma=self.gamma
+        )
+
+        # ----------------------------------------------------
+        # Carrega checkpoint
+        # ----------------------------------------------------
+
+        self.load_checkpoint()
+
+    # ========================================================
+    # CHECKPOINT - CARREGAR
+    # ========================================================
+
+    def load_checkpoint(self):
+
+        if not os.path.exists(MODEL_PATH):
+
+            print(
+                f"Nenhum checkpoint encontrado em: "
+                f"{MODEL_PATH}",
+                flush=True
+            )
+
+            return
+
+        print(
+            f"Carregando checkpoint: "
+            f"{MODEL_PATH}",
+            flush=True
+        )
+
+        checkpoint = torch.load(
+            MODEL_PATH,
+            map_location=DEVICE
+        )
+
+        # ----------------------------------------------------
+        # Compatibilidade com checkpoint completo
+        # ----------------------------------------------------
+
+        if isinstance(
+            checkpoint,
+            dict
+        ) and "model_state_dict" in checkpoint:
+
+            self.model.load_state_dict(
+                checkpoint["model_state_dict"]
+            )
+
+            if "optimizer_state_dict" in checkpoint:
+
+                self.trainer.optimizer.load_state_dict(
+                    checkpoint["optimizer_state_dict"]
+                )
+
+            self.n_game = checkpoint.get(
+                "n_game",
+                0
+            )
+
+            self.record = checkpoint.get(
+                "record",
+                0
+            )
+
+        # ----------------------------------------------------
+        # Compatibilidade com state_dict antigo
+        # ----------------------------------------------------
+
+        else:
+
+            self.model.load_state_dict(
+                checkpoint
+            )
+
+        self.model.to(DEVICE)
+
+        print(
+            f"Checkpoint carregado!",
+            flush=True
+        )
+
+        print(
+            f"Partida inicial: {self.n_game}",
+            flush=True
+        )
+
+        print(
+            f"Recorde inicial: {self.record}",
+            flush=True
+        )
+
+    # ========================================================
+    # CHECKPOINT - SALVAR
+    # ========================================================
+
+    def save_checkpoint(self):
+
+        os.makedirs(
+            MODEL_DIR,
+            exist_ok=True
+        )
+
+        checkpoint = {
+
+            "model_state_dict":
+                self.model.state_dict(),
+
+            "optimizer_state_dict":
+                self.trainer.optimizer.state_dict(),
+
+            "n_game":
+                self.n_game,
+
+            "record":
+                self.record
+        }
+
+        torch.save(
+            checkpoint,
+            MODEL_PATH
+        )
+
+        print(
+            f"Checkpoint salvo em: "
+            f"{MODEL_PATH}",
+            flush=True
         )
 
     # ========================================================
@@ -192,31 +338,52 @@ class Agent:
 
         state = [
 
+            # ------------------------------------------------
             # Perigo à frente
-            (dir_u and game.is_collision(point_u)) or
-            (dir_d and game.is_collision(point_d)) or
-            (dir_l and game.is_collision(point_l)) or
-            (dir_r and game.is_collision(point_r)),
+            # ------------------------------------------------
 
+            (
+                (dir_u and game.is_collision(point_u)) or
+                (dir_d and game.is_collision(point_d)) or
+                (dir_l and game.is_collision(point_l)) or
+                (dir_r and game.is_collision(point_r))
+            ),
+
+            # ------------------------------------------------
             # Perigo à direita
-            (dir_u and game.is_collision(point_r)) or
-            (dir_d and game.is_collision(point_l)) or
-            (dir_l and game.is_collision(point_u)) or
-            (dir_r and game.is_collision(point_d)),
+            # ------------------------------------------------
 
+            (
+                (dir_u and game.is_collision(point_r)) or
+                (dir_d and game.is_collision(point_l)) or
+                (dir_l and game.is_collision(point_u)) or
+                (dir_r and game.is_collision(point_d))
+            ),
+
+            # ------------------------------------------------
             # Perigo à esquerda
-            (dir_u and game.is_collision(point_l)) or
-            (dir_d and game.is_collision(point_r)) or
-            (dir_l and game.is_collision(point_d)) or
-            (dir_r and game.is_collision(point_u)),
+            # ------------------------------------------------
 
+            (
+                (dir_u and game.is_collision(point_l)) or
+                (dir_d and game.is_collision(point_r)) or
+                (dir_l and game.is_collision(point_d)) or
+                (dir_r and game.is_collision(point_u))
+            ),
+
+            # ------------------------------------------------
             # Direção
+            # ------------------------------------------------
+
             dir_l,
             dir_r,
             dir_u,
             dir_d,
 
+            # ------------------------------------------------
             # Comida
+            # ------------------------------------------------
+
             game.food.x < head.x,
             game.food.x > head.x,
             game.food.y < head.y,
@@ -309,18 +476,34 @@ class Agent:
             80 - self.n_game
         )
 
-        final_move = [0, 0, 0]
+        final_move = [
+            0,
+            0,
+            0
+        ]
 
+        # ----------------------------------------------------
         # Exploração
-        if random.randint(0, 200) < self.epsilon:
+        # ----------------------------------------------------
 
-            move = random.randint(0, 2)
+        if random.randint(
+            0,
+            200
+        ) < self.epsilon:
 
-        # Exploração pelo modelo
+            move = random.randint(
+                0,
+                2
+            )
+
+        # ----------------------------------------------------
+        # Modelo
+        # ----------------------------------------------------
+
         else:
 
             state0 = torch.as_tensor(
-                state,
+                np.array(state),
                 dtype=torch.float32,
                 device=DEVICE
             )
@@ -352,12 +535,42 @@ def train():
 
     game = SnakeGameAI()
 
+    print(
+        "==============================================",
+        flush=True
+    )
+
+    print(
+        "       TREINAMENTO DQN INICIADO",
+        flush=True
+    )
+
+    print(
+        f"Modelo: {MODEL_PATH}",
+        flush=True
+    )
+
+    print(
+        f"Partida inicial: {agent.n_game}",
+        flush=True
+    )
+
+    print(
+        f"Recorde inicial: {agent.record}",
+        flush=True
+    )
+
+    print(
+        "==============================================",
+        flush=True
+    )
+
     try:
 
         while True:
 
             # ------------------------------------------------
-            # ESTADO ATUAL
+            # Estado atual
             # ------------------------------------------------
 
             state_old = agent.get_state(
@@ -365,7 +578,7 @@ def train():
             )
 
             # ------------------------------------------------
-            # ESCOLHE AÇÃO
+            # Escolhe ação
             # ------------------------------------------------
 
             final_move = agent.get_action(
@@ -373,7 +586,7 @@ def train():
             )
 
             # ------------------------------------------------
-            # EXECUTA AÇÃO
+            # Executa ação
             # ------------------------------------------------
 
             reward, done, score = game.play_step(
@@ -381,7 +594,7 @@ def train():
             )
 
             # ------------------------------------------------
-            # NOVO ESTADO
+            # Novo estado
             # ------------------------------------------------
 
             state_new = agent.get_state(
@@ -389,7 +602,7 @@ def train():
             )
 
             # ------------------------------------------------
-            # SHORT MEMORY
+            # Short memory
             # ------------------------------------------------
 
             agent.train_short_memory(
@@ -401,7 +614,7 @@ def train():
             )
 
             # ------------------------------------------------
-            # REPLAY MEMORY
+            # Replay memory
             # ------------------------------------------------
 
             agent.remember(
@@ -413,7 +626,7 @@ def train():
             )
 
             # ------------------------------------------------
-            # FIM DA PARTIDA
+            # Fim da partida
             # ------------------------------------------------
 
             if done:
@@ -423,23 +636,56 @@ def train():
                 agent.n_game += 1
 
                 # ------------------------------------------------
-                # LONG MEMORY
+                # Long memory
                 # ------------------------------------------------
 
                 agent.train_long_memory()
 
                 # ------------------------------------------------
-                # LOG
+                # Log
                 # ------------------------------------------------
 
                 logger.log_game(
                     score
                 )
 
+                # ------------------------------------------------
+                # Atualiza recorde
+                # ------------------------------------------------
+
+                if score > agent.record:
+
+                    agent.record = score
+
+                    print(
+                        f"Novo recorde: "
+                        f"{agent.record}",
+                        flush=True
+                    )
+
+                # ------------------------------------------------
+                # Salva checkpoint
+                # ------------------------------------------------
+
+                agent.save_checkpoint()
+
     except KeyboardInterrupt:
 
         print(
-            "\nTreinamento interrompido."
+            "\nTreinamento interrompido.",
+            flush=True
+        )
+
+        print(
+            "Salvando checkpoint...",
+            flush=True
+        )
+
+        agent.save_checkpoint()
+
+        print(
+            "Checkpoint salvo.",
+            flush=True
         )
 
 

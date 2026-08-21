@@ -2,7 +2,7 @@ import torch
 import random
 import numpy as np
 from collections import deque
-from Teste_IA.SnakeGameAI.DQN.snake_gameai import (
+from snake_gameai import (
     SnakeGameAI,
     Direction,
     Point,
@@ -13,7 +13,7 @@ from model import (
     QTrainer,
     DEVICE
 )
-from Teste_IA.SnakeGameAI.DQN.Helper import plot
+from Helper import plot
 
 
 MAX_MEMORY = 100_000

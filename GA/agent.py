@@ -1,8 +1,9 @@
 import numpy as np
 import torch
+import os
 
-from SnakeGameAI.GA.snake_gameai import SnakeGameAI, Direction, Point, BLOCK_SIZE
-from SnakeGameAI.GA.model import DEVICE, Linear_QNET
+from snake_gameai import SnakeGameAI, Direction, Point, BLOCK_SIZE
+from model import DEVICE, Linear_QNET
 
 # Paramentros geneticos
 MUTATION_RATE = 0.15 # % dos pesos que sofrem mutação em cada filho
@@ -143,4 +144,56 @@ class Agent:
         if generation == 0 and record == 0:
             return None, 0, 0
         agent = Agent(model=model)
-        return agent, generation, record    
+        return agent, generation, record  
+
+    def save_generation_log(
+            self,
+            generation,
+            best_score,
+            best_fitness,
+            average_score,
+            average_fitness,
+            population_size,
+            mutation_rate,
+            mutation_strength,
+            elapsed_time,
+            population
+        ):
+    
+            os.makedirs(LOG_DIR, exist_ok=True)
+            filepath = os.path.join(LOG_DIR, "history.json")
+    
+            if os.path.exists(filepath):
+                with open(filepath, "r", encoding="utf-8") as file:
+                    history = json.load(file)
+            else:
+                history = []
+    
+            # Desempenho de cada indivíduo
+            individuals_data = []
+    
+            for i, agent in enumerate(population):
+                individuals_data.append({
+                    "id": i,
+                    "score": agent.score,
+                    "fitness": agent.fitness
+                })
+    
+            # Dados da geração
+            generation_data = {
+                "generation": generation,
+                "best_score": best_score,
+                "best_fitness": best_fitness,
+                "average_score": average_score,
+                "average_fitness": average_fitness,
+                "population_size": population_size,
+                "mutation_rate": mutation_rate,
+                "mutation_strength": mutation_strength,
+                "elapsed_time": elapsed_time,
+                "individuals": individuals_data
+            }
+    
+            history.append(generation_data)
+    
+            with open(filepath, "w", encoding="utf-8") as file:
+                json.dump(history, file, indent=4)  

@@ -104,7 +104,7 @@ class Linear_QNET(nn.Module):
 
         return generation, record
 
-
+    """""
     def save_generation_log(
         self,
         generation,
@@ -156,3 +156,4 @@ class Linear_QNET(nn.Module):
 
         with open(filepath, "w", encoding="utf-8") as file:
             json.dump(history, file, indent=4)
+        """
