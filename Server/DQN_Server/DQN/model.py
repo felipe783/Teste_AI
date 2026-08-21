@@ -17,97 +17,6 @@ torch.set_num_threads(4)
 
 
 # ============================================================
-# LOG
-# ============================================================
-
-LOG_DIR = "logs"
-LOG_FILE = os.path.join(
-    LOG_DIR,
-    "training_log.csv"
-)
-
-
-class TrainingLogger:
-
-    def __init__(self):
-
-        os.makedirs(
-            LOG_DIR,
-            exist_ok=True
-        )
-
-        self.total_games = 0
-        self.record = 0
-
-        if os.path.exists(LOG_FILE):
-
-            with open(
-                LOG_FILE,
-                "r",
-                newline="",
-                encoding="utf-8"
-            ) as file:
-
-                reader = csv.DictReader(file)
-
-                for row in reader:
-
-                    self.total_games = int(
-                        row["partida"]
-                    )
-
-                    self.record = max(
-                        self.record,
-                        int(row["max"])
-                    )
-
-    def log_game(self, score):
-
-        self.total_games += 1
-
-        self.record = max(
-            self.record,
-            score
-        )
-
-        file_exists = os.path.exists(
-            LOG_FILE
-        )
-
-        with open(
-            LOG_FILE,
-            "a",
-            newline="",
-            encoding="utf-8"
-        ) as file:
-
-            writer = csv.writer(file)
-
-            if not file_exists:
-
-                writer.writerow([
-                    "partida",
-                    "score",
-                    "max",
-                    "total_partidas"
-                ])
-
-            writer.writerow([
-                self.total_games,
-                score,
-                self.record,
-                self.total_games
-            ])
-
-        print(
-            f"Partida: {self.total_games} | "
-            f"Score: {score} | "
-            f"Max: {self.record} | "
-            f"Total: {self.total_games}"
-        )
-
-
-# ============================================================
 # Q-NETWORK
 # ============================================================
 
@@ -153,12 +62,40 @@ class QTrainer:
         self,
         model,
         lr,
-        gamma
+        gamma,
+        target_update_freq=1000
     ):
 
         self.lr = lr
         self.gamma = gamma
         self.model = model
+
+        # ----------------------------------------------------
+        # TARGET NETWORK
+        # ----------------------------------------------------
+        # Rede separada usada apenas para estimar o Q do
+        # próximo estado. Evita o "moving target problem":
+        # sem isso, a mesma rede que está sendo treinada
+        # também define o alvo, o que causa instabilidade e
+        # esquecimento ao longo do treinamento.
+
+        self.target_model = Linear_QNet(
+            model.linear1.in_features,
+            model.linear1.out_features,
+            model.linear2.out_features
+        )
+
+        self.target_model.load_state_dict(
+            model.state_dict()
+        )
+
+        self.target_model.eval()
+
+        for param in self.target_model.parameters():
+            param.requires_grad = False
+
+        self.target_update_freq = target_update_freq
+        self.train_steps = 0
 
         self.optimizer = optim.Adam(
             model.parameters(),
@@ -166,6 +103,28 @@ class QTrainer:
         )
 
         self.criterion = nn.MSELoss()
+
+    # ========================================================
+    # SINCRONIZA TARGET COM O MODELO ONLINE
+    # ========================================================
+
+    def update_target_model(self):
+
+        self.target_model.load_state_dict(
+            self.model.state_dict()
+        )
+
+    # ========================================================
+    # CARREGA ESTADO DO TARGET A PARTIR DE CHECKPOINT
+    # ========================================================
+
+    def load_target_state_dict(self, state_dict):
+
+        self.target_model.load_state_dict(state_dict)
+        self.target_model.eval()
+
+        for param in self.target_model.parameters():
+            param.requires_grad = False
 
     # ========================================================
     # TRAIN STEP
@@ -228,12 +187,12 @@ class QTrainer:
         pred = self.model(state)
 
         # ----------------------------------------------------
-        # Q DO PRÓXIMO ESTADO
+        # Q DO PRÓXIMO ESTADO (TARGET NETWORK)
         # ----------------------------------------------------
 
         with torch.no_grad():
 
-            next_pred = self.model(
+            next_pred = self.target_model(
                 next_state
             )
 
@@ -293,4 +252,25 @@ class QTrainer:
 
         loss.backward()
 
+        # ----------------------------------------------------
+        # GRADIENT CLIPPING
+        # ----------------------------------------------------
+        # Evita passos de otimização bruscos causados por
+        # gradientes grandes ocasionais (comum em Q-learning
+        # sem normalização de reward).
+
+        torch.nn.utils.clip_grad_norm_(
+            self.model.parameters(),
+            max_norm=1.0
+        )
+
         self.optimizer.step()
+
+        # ----------------------------------------------------
+        # ATUALIZA TARGET NETWORK PERIODICAMENTE
+        # ----------------------------------------------------
+
+        self.train_steps += 1
+
+        if self.train_steps % self.target_update_freq == 0:
+            self.update_target_model()

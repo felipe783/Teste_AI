@@ -28,6 +28,8 @@ MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
 LR = 0.001
 
+TARGET_UPDATE_FREQ = 1000
+
 MODEL_DIR = "Models"
 
 MODEL_PATH = os.path.join(
@@ -203,13 +205,14 @@ class Agent:
         )
 
         # ----------------------------------------------------
-        # Trainer
+        # Trainer (com target network)
         # ----------------------------------------------------
 
         self.trainer = QTrainer(
             self.model,
             lr=LR,
-            gamma=self.gamma
+            gamma=self.gamma,
+            target_update_freq=TARGET_UPDATE_FREQ
         )
 
         # ----------------------------------------------------
@@ -265,6 +268,22 @@ class Agent:
                     checkpoint["optimizer_state_dict"]
                 )
 
+            # ------------------------------------------------
+            # Target network: usa o estado salvo se existir,
+            # senão sincroniza com o modelo online recém
+            # carregado (evita alvo desatualizado/aleatório).
+            # ------------------------------------------------
+
+            if "target_model_state_dict" in checkpoint:
+
+                self.trainer.load_target_state_dict(
+                    checkpoint["target_model_state_dict"]
+                )
+
+            else:
+
+                self.trainer.update_target_model()
+
             self.n_game = checkpoint.get(
                 "n_game",
                 0
@@ -284,6 +303,8 @@ class Agent:
             self.model.load_state_dict(
                 checkpoint
             )
+
+            self.trainer.update_target_model()
 
         self.model.to(DEVICE)
 
@@ -305,6 +326,10 @@ class Agent:
     # ========================================================
     # CHECKPOINT - SALVAR
     # ========================================================
+    # Só deve ser chamado quando houver um novo recorde (ver
+    # train()). Salvar em toda partida permite que um modelo
+    # pior sobrescreva um modelo que já tinha aprendido uma
+    # política melhor.
 
     def save_checkpoint(self):
 
@@ -317,6 +342,9 @@ class Agent:
 
             "model_state_dict":
                 self.model.state_dict(),
+
+            "target_model_state_dict":
+                self.trainer.target_model.state_dict(),
 
             "optimizer_state_dict":
                 self.trainer.optimizer.state_dict(),
@@ -335,7 +363,7 @@ class Agent:
 
         print(
             f"Checkpoint salvo em: "
-            f"{MODEL_PATH}",
+            f"{MODEL_PATH} (novo recorde: {self.record})",
             flush=True
         )
 
@@ -707,10 +735,22 @@ def train():
                 agent.train_long_memory()
 
                 # ------------------------------------------------
-                # Atualiza recorde
+                # Log (sempre loga, recorde ou não)
                 # ------------------------------------------------
 
-                if score > agent.record:
+                is_new_record = score > agent.record
+
+                logger.log_game(
+                    score
+                )
+
+                # ------------------------------------------------
+                # Atualiza recorde e salva checkpoint SÓ quando
+                # há melhora — evita que um modelo pior
+                # sobrescreva um checkpoint melhor.
+                # ------------------------------------------------
+
+                if is_new_record:
 
                     agent.record = score
 
@@ -720,19 +760,7 @@ def train():
                         flush=True
                     )
 
-                # ------------------------------------------------
-                # Log
-                # ------------------------------------------------
-
-                logger.log_game(
-                    score
-                )
-
-                # ------------------------------------------------
-                # Salva checkpoint
-                # ------------------------------------------------
-
-                agent.save_checkpoint()
+                    agent.save_checkpoint()
 
     except KeyboardInterrupt:
 
@@ -742,7 +770,7 @@ def train():
         )
 
         print(
-            "Salvando checkpoint...",
+            "Salvando checkpoint de continuidade...",
             flush=True
         )
 
