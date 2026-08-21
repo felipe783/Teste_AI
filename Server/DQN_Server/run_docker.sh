@@ -30,6 +30,8 @@ echo "Criando container..."
 docker create \
     --name "$CONTAINER_NAME" \
     --restart unless-stopped \
+    --log-opt max-size=5g \
+    --log-opt max-file=1 \
     -v "$MODELS_DIR:/Treinamento_DQN/Models" \
     -v "$LOGS_DIR:/Treinamento_DQN/logs" \
     "$IMAGE_NAME"
