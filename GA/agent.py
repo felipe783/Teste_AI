@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from SnakeGameAI.Geral.snake_gameai import SnakeGameAI, Direction, Point, BLOCK_SIZE
+from SnakeGameAI.GA.snake_gameai import SnakeGameAI, Direction, Point, BLOCK_SIZE
 from SnakeGameAI.GA.model import DEVICE, Linear_QNET
 
 # Paramentros geneticos

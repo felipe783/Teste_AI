@@ -12,7 +12,7 @@ Uso (a partir da raiz do projeto, acima de SnakeGameAI/):
 import random
 
 from SnakeGameAI.GA.agent import Agent
-from Teste_IA.SnakeGameAI.Geral.Helper import plot
+from Teste_IA.SnakeGameAI.DQN.Helper import plot
 
 # ----------------------- Hiperparâmetros -----------------------
 
