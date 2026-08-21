@@ -29,12 +29,14 @@ BATCH_SIZE = 1000
 LR = 0.001
 
 MODEL_DIR = "Models"
+
 MODEL_PATH = os.path.join(
     MODEL_DIR,
     "model.pth"
 )
 
 LOG_DIR = "logs"
+
 LOG_FILE = os.path.join(
     LOG_DIR,
     "training_log.csv"
@@ -70,14 +72,47 @@ class TrainingLogger:
 
                 for row in reader:
 
-                    self.total_games = int(
-                        row["partida"]
-                    )
+                    try:
 
-                    self.record = max(
-                        self.record,
-                        int(row["max"])
-                    )
+                        self.total_games = max(
+                            self.total_games,
+                            int(row["partida"])
+                        )
+
+                        self.record = max(
+                            self.record,
+                            int(row["max"])
+                        )
+
+                    except (
+                        ValueError,
+                        KeyError
+                    ):
+
+                        continue
+
+    # ========================================================
+    # SINCRONIZA COM CHECKPOINT
+    # ========================================================
+
+    def sync_with_agent(self, agent):
+
+        # O checkpoint possui a contagem mais confiável
+        # do treinamento.
+
+        self.total_games = max(
+            self.total_games,
+            agent.n_game
+        )
+
+        self.record = max(
+            self.record,
+            agent.record
+        )
+
+    # ========================================================
+    # LOG DE PARTIDA
+    # ========================================================
 
     def log_game(self, score):
 
@@ -211,13 +246,14 @@ class Agent:
         )
 
         # ----------------------------------------------------
-        # Compatibilidade com checkpoint completo
+        # Checkpoint completo
         # ----------------------------------------------------
 
-        if isinstance(
-            checkpoint,
-            dict
-        ) and "model_state_dict" in checkpoint:
+        if (
+            isinstance(checkpoint, dict)
+            and
+            "model_state_dict" in checkpoint
+        ):
 
             self.model.load_state_dict(
                 checkpoint["model_state_dict"]
@@ -240,7 +276,7 @@ class Agent:
             )
 
         # ----------------------------------------------------
-        # Compatibilidade com state_dict antigo
+        # State dict antigo
         # ----------------------------------------------------
 
         else:
@@ -252,7 +288,7 @@ class Agent:
         self.model.to(DEVICE)
 
         print(
-            f"Checkpoint carregado!",
+            "Checkpoint carregado!",
             flush=True
         )
 
@@ -331,10 +367,21 @@ class Agent:
             head.y + BLOCK_SIZE
         )
 
-        dir_l = game.direction == Direction.LEFT
-        dir_r = game.direction == Direction.RIGHT
-        dir_u = game.direction == Direction.UP
-        dir_d = game.direction == Direction.DOWN
+        dir_l = (
+            game.direction == Direction.LEFT
+        )
+
+        dir_r = (
+            game.direction == Direction.RIGHT
+        )
+
+        dir_u = (
+            game.direction == Direction.UP
+        )
+
+        dir_d = (
+            game.direction == Direction.DOWN
+        )
 
         state = [
 
@@ -425,6 +472,7 @@ class Agent:
     def train_long_memory(self):
 
         if len(self.memory) < BATCH_SIZE:
+
             return
 
         mini_sample = random.sample(
@@ -432,9 +480,13 @@ class Agent:
             BATCH_SIZE
         )
 
-        states, actions, rewards, next_states, dones = zip(
-            *mini_sample
-        )
+        (
+            states,
+            actions,
+            rewards,
+            next_states,
+            dones
+        ) = zip(*mini_sample)
 
         self.trainer.train_step(
             states,
@@ -533,6 +585,14 @@ def train():
 
     logger = TrainingLogger()
 
+    # --------------------------------------------------------
+    # Sincroniza o logger com o checkpoint
+    # --------------------------------------------------------
+
+    logger.sync_with_agent(
+        agent
+    )
+
     game = SnakeGameAI()
 
     print(
@@ -557,6 +617,11 @@ def train():
 
     print(
         f"Recorde inicial: {agent.record}",
+        flush=True
+    )
+
+    print(
+        f"Logger inicial: {logger.total_games}",
         flush=True
     )
 
@@ -642,14 +707,6 @@ def train():
                 agent.train_long_memory()
 
                 # ------------------------------------------------
-                # Log
-                # ------------------------------------------------
-
-                logger.log_game(
-                    score
-                )
-
-                # ------------------------------------------------
                 # Atualiza recorde
                 # ------------------------------------------------
 
@@ -662,6 +719,14 @@ def train():
                         f"{agent.record}",
                         flush=True
                     )
+
+                # ------------------------------------------------
+                # Log
+                # ------------------------------------------------
+
+                logger.log_game(
+                    score
+                )
 
                 # ------------------------------------------------
                 # Salva checkpoint
