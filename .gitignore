@@ -25,6 +25,7 @@ checkpoints/
 runs/
 wandb/
 
+*.json
 *.pt
 *.ckpt
 *.onnx
