@@ -1,5 +1,5 @@
-FROM python:3.12-slim
-WORKDIR /Treinamento_DQN
+FROM python:3.12-slim 
+WORKDIR /Treinamento_GA
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .

@@ -3,8 +3,8 @@ import math
 import numpy as np
 import torch
 import os
-from snake_gameai import SnakeGameAI, Direction, Point, BLOCK_SIZE
-from model import DEVICE, Linear_QNET
+from Teste_AI.SnakeGame.Server.GA_Server.GA.snake_gameai import SnakeGameAI, Direction, Point, BLOCK_SIZE
+from Teste_AI.SnakeGame.Server.GA_Server.GA.model import DEVICE, Linear_QNET
 
 MUTATION_RATE = 0.15       # % dos pesos que sofrem mutação em cada filho
 MUTATION_STRENGTH = 0.30   # Desvio padrão do ruído gaussiano aplicado

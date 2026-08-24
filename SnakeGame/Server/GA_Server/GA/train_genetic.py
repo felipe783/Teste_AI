@@ -1,8 +1,6 @@
 import random
 import time
-from agent import Agent
-from Helper import plot
-
+from Teste_AI.SnakeGame.Server.GA_Server.GA.agent import Agent
 
 POPULATION_SIZE = 80 
 GENERATIONS = 500
