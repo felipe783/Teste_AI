@@ -34,8 +34,6 @@ def next_generation(population):
     return new_population
 
 def train():
-    plot_scores = []
-    plot_mean_scores = []
     total_score = 0
     record = 0
     start_gen = 0
@@ -61,11 +59,7 @@ def train():
             for agent in population:
                 _, score = agent.play_and_evaluate()
                 gen_best_score = max(gen_best_score, score)
-
-                plot_scores.append(score)
                 total_score += score
-                mean_score = total_score /  len(plot_scores)
-                plot_mean_scores.append(mean_score)
 
             best_in_gen = max(population, key=lambda a: a.fitness)
 
@@ -101,7 +95,6 @@ def train():
                             population=population
                         )
             
-            plot(plot_scores, plot_mean_scores)
             population = next_generation(population)
 
     except KeyboardInterrupt:

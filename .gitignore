@@ -25,6 +25,9 @@ checkpoints/
 runs/
 wandb/
 
+models/
+Models/ 
+
 *.json
 *.pt
 *.ckpt
