@@ -23,11 +23,10 @@ class Direction(Enum):
     UP = 3
     DOWN = 4
 
-
 Point = namedtuple('Point', 'x , y')
 
 BLOCK_SIZE = 20
-SPEED = 1000
+SPEED = 60
 VIDEO_SPEED = 60
 WHITE = (255, 255, 255)
 RED = (200, 0, 0)

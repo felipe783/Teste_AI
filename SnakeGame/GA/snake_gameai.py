@@ -9,11 +9,8 @@ class Direction(Enum):
     UP = 3
     DOWN = 4
 
-
 Point = namedtuple('Point', 'x y')
-
 BLOCK_SIZE = 20
-
 
 class SnakeGameAI:
 
