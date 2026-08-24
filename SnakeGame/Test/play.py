@@ -3,7 +3,7 @@ import numpy as np
 from snake_gameai import SnakeGameAI, Direction, Point, BLOCK_SIZE
 from model import Linear_QNet, DEVICE
 
-MODEL_PATH = "Models/best_genetic.pth"
+MODEL_PATH = "Models/model.pth"
 
 INPUT_SIZE = 15
 HIDDEN_SIZE = 256

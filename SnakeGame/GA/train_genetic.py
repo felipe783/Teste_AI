@@ -6,7 +6,9 @@ from Helper import plot
 
 POPULATION_SIZE = 80 
 GENERATIONS = 500
-ELITE_FRACTION = 0.10
+# ELITE_FRACTION = 0.10
+# TOURNAMENT_SIZE = 3
+ELITE_FRACTION = 0.15
 TOURNAMENT_SIZE = 5
 
 # Selecao
@@ -43,7 +45,12 @@ def train():
     start_gen = 0
 
     seed_agent, start_gen, record = Agent.load_checkpoint()
-    population = [Agent() for _ in range(POPULATION_SIZE)]
+
+    # population = [Agent() for _ in range(POPULATION_SIZE)]
+    if seed_agent is not None:
+        population = [seed_agent.clone() for _ in range(POPULATION_SIZE)]
+    else:
+        population = [Agent() for _ in range(POPULATION_SIZE)]
     if seed_agent is not None:
         population[0] = seed_agent
         print(

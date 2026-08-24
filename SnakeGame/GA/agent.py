@@ -6,8 +6,10 @@ import os
 from snake_gameai import SnakeGameAI, Direction, Point, BLOCK_SIZE
 from model import DEVICE, Linear_QNET
 
-MUTATION_RATE = 0.15       # % dos pesos que sofrem mutação em cada filho
-MUTATION_STRENGTH = 0.30   # Desvio padrão do ruído gaussiano aplicado
+MUTATION_RATE = 0.15
+MUTATION_STRENGTH = 0.30
+# MUTATION_RATE = 0.10       # % dos pesos que sofrem mutação em cada filho
+# MUTATION_STRENGTH = 0.15   # Desvio padrão do ruído gaussiano aplicado
 MAX_STEPS_WITHOUT_FOOD = 100
 
 STATE_SIZE = 15
@@ -144,7 +146,7 @@ class Agent:
         game = SnakeGameAI()  # Nova partida
         steps = 0
         steps_since_food = 0
-        max_steps_without_food = MAX_STEPS_WITHOUT_FOOD
+        max_steps_without_food = max(MAX_STEPS_WITHOUT_FOOD, 20 * len(game.snake))
 
         while True:
 
@@ -185,12 +187,16 @@ class Agent:
         # Pega os Pesos dos pais
         wa = parent_a.model.get_flat_weights()
         wb = parent_b.model.get_flat_weights()
-
+        
         # Cria numeros aleatorios entre 1 e 0, com o tamanho de "wa", e transforma em Bool
         mask = torch.rand_like(wa) < 0.5
 
         # Se for true pega A se for false pega B
         child_weights = torch.where(mask, wa, wb)
+        
+        # alpha = torch.rand_like(wa)
+        # child_weights = alpha * wa + (1 - alpha) * wb
+        
 
         child_mutation_rate = (parent_a.mutation_rate + parent_b.mutation_rate) / 2
         child_mutation_strength = (parent_a.mutation_strength + parent_b.mutation_strength) / 2
@@ -308,6 +314,8 @@ class Agent:
         }
 
         history.append(generation_data)
-
-        with open(filepath, "w", encoding="utf-8") as file:
+        temp_filepath = filepath + ".tmp" 
+        with open(temp_filepath, "w", encoding="utf-8") as file:
             json.dump(history, file, indent=4)
+
+        os.replace(temp_filepath, filepath)
