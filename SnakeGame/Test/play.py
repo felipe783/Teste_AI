@@ -3,11 +3,23 @@ import numpy as np
 from snake_gameai import SnakeGameAI, Direction, Point, BLOCK_SIZE
 from model import Linear_QNet, DEVICE
 
-MODEL_PATH = "Models/model.pth"
-
 INPUT_SIZE = 15
 HIDDEN_SIZE = 256
 OUTPUT_SIZE = 3
+
+print("------------\n")
+print("1 -- Modelo treinado por Recompensa")
+print("2 -- Modelo treinado por Geracoes\n")
+print("------------")
+escolha = int(input("Numero: "))
+
+if escolha == 1:
+    MODEL_PATH = "Models/model.pth"
+elif escolha == 2:
+    MODEL_PATH = "Models/best_genetic.pth"
+else:
+    print("Escolhe certo")
+    exit()
 
 def get_state(game):
         head = game.snake[0]
