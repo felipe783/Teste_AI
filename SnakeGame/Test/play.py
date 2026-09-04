@@ -1,3 +1,8 @@
+from datetime import datetime
+from pathlib import Path
+
+import cv2
+import pygame
 import torch
 import numpy as np
 from snake_gameai import SnakeGameAI, Direction, Point, BLOCK_SIZE
@@ -6,6 +11,8 @@ from model import Linear_QNet, DEVICE
 INPUT_SIZE = 21
 HIDDEN_SIZE = 256
 OUTPUT_SIZE = 3
+VIDEO_DIR = Path(__file__).resolve().parent / "video"
+VIDEO_FPS = 40
 
 print("------------\n")
 print("1 -- Modelo treinado por Recompensa")
@@ -51,7 +58,40 @@ model.load_state_dict(checkpoint["model_state_dict"])
 
 model.eval()
 
+
+def criar_gravador(game):
+    """Cria um arquivo MP4 novo para a partida atual."""
+    VIDEO_DIR.mkdir(exist_ok=True)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S_%f")
+    caminho = VIDEO_DIR / f"snake_{timestamp}.mp4"
+    codec = cv2.VideoWriter_fourcc(*"mp4v")
+    gravador = cv2.VideoWriter(str(caminho), codec, VIDEO_FPS, (game.w, game.h))
+
+    if not gravador.isOpened():
+        raise RuntimeError(f"Nao foi possivel criar o video: {caminho}")
+
+    print(f"Gravando partida em: {caminho}")
+    return gravador, caminho
+
+
+def finalizar_gravacao(gravador, caminho, score):
+    """Fecha o video e acrescenta a pontuacao final ao nome do arquivo."""
+    gravador.release()
+    caminho_final = caminho.with_name(f"{caminho.stem}_score_{score}.mp4")
+    caminho.rename(caminho_final)
+    print(f"Video salvo em: {caminho_final}")
+
+
+def gravar_frame(gravador, game):
+    """Copia o frame mostrado pelo Pygame para o arquivo de video."""
+    frame_rgb = pygame.surfarray.array3d(game.display)
+    frame_bgr = cv2.cvtColor(np.transpose(frame_rgb, (1, 0, 2)), cv2.COLOR_RGB2BGR)
+    gravador.write(frame_bgr)
+
+
 game = SnakeGameAI()
+gravador, caminho_video = criar_gravador(game)
+
 try:
     while True:
         state = get_state(game)
@@ -66,9 +106,15 @@ try:
         action[action_index] = 1
 
         reward, game_over, score = game.play_step(action)
+        gravar_frame(gravador, game)
 
         if game_over:
             print(f"Game Over! Score: {score}")
+            finalizar_gravacao(gravador, caminho_video, score)
             game.reset()
+            gravador, caminho_video = criar_gravador(game)
 except KeyboardInterrupt:
-     print("Teste Encerrado")
+    print("Teste Encerrado")
+finally:
+    finalizar_gravacao(gravador, caminho_video, game.score)
+    pygame.quit()
