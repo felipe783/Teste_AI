@@ -73,7 +73,7 @@ def checkQuadrants(board):
 
     return correct
 
-def solveProbabilistic(board):  
+def solveAttempt(board):
 
     while not checkVictory(board):
 
@@ -84,10 +84,27 @@ def solveProbabilistic(board):
             return False
 
         weights = getWeights(board, candidates)
-        number = getNumber(candidates, weights)
         # number = random.choices(candidates,weights=weights,k=1)[0] # Esta linha sortea um elemento usando os Pesos, e pega o elemento da posição 0, o K é quantos numeros queremos retornar(no caso 1)
-        
+        number = getNumber(candidates, weights)
         board[row][col] = number
 
+    return True
+
+def solveProbabilistic(board):  
+
+    attempts = 0
+    original = [row[:] for row in board]
+
+    while not checkVictory(board):
+        attempts += 1
+        for row in range(9):
+            for col in range(9):
+                board[row][col] = original[row][col]
+                
+        result = solveAttempt(board)
+
+        if result:
+            print(f"Solução encontrada em {attempts} tentativas")
+            return board
 
     return board
