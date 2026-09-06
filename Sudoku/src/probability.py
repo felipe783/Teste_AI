@@ -1,4 +1,6 @@
 from src.BoardGeneration import *
+from src.Board import *
+import random
 
 def getCandidates(board, row , col):
     # candidates = [num for num in range(1,10) if isValid(board, row, col, num)]
@@ -43,3 +45,32 @@ def getProbability(weights):
         probability.append(weight / total)
 
     return probability
+
+def getNumber(candidates, weights):
+    total = sum(weights)
+    value = random.uniform(0, total) # Sorteador um Decimal entre 0 e total(soma dos pesos)
+    accumulated = 0
+
+    for i, weight in enumerate(weights):
+        accumulated += weight
+        if value < accumulated:
+            return candidates[i]
+
+def solveProbabilistic(board):
+
+    while not checkVictory(board):
+
+        row, col = findEmpty(board)
+        candidates = getCandidates(board, row, col)
+
+        if not candidates:
+            return False
+
+        weights = getWeights(board, candidates)
+        number = getNumber(candidates, weights)
+        # number = random.choices(candidates,weights=weights,k=1)[0] # Esta linha sortea um elemento usando os Pesos, e pega o elemento da posição 0, o K é quantos numeros queremos retornar(no caso 1)
+        
+        board[row][col] = number
+
+
+    return board
