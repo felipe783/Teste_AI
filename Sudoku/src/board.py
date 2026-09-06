@@ -2,11 +2,11 @@ def showBoard(board):
     print("┌───────┬───────┬───────┐")
     for i, line in enumerate(board):
         print("│", end=" ")
-        for j, cell in enumerate(line):
-            if cell == 0:
+        for j, num in enumerate(line):
+            if num == 0:
                 print("\033[90m.\033[0m", end=" ")
             else:
-                print(f"\033[92m{cell}\033[0m", end=" ")
+                print(f"\033[92m{num}\033[0m", end=" ")
             if j == 2 or j == 5:
                 print("│", end=" ")
         print("│")
@@ -18,7 +18,7 @@ def checkVictory(board):
 
     for row in board:  # Linha
         # Pega uma Lista(row) e comprime em outra lista(numbers)
-        numbers = [Cell for Cell in row]  # Pega os Valores por linha, "numbers[1,2...9]""
+        numbers = [num for num in row]  # Pega os Valores por linha, "numbers[1,2...9]""
         if sorted(numbers) != list(range(1, 10)): # Organiza os Numeros e ve se possuia os numeros de 1 a 9
             return False
 

@@ -7,6 +7,7 @@ NUMBERS_HARD = 25
 
 def isValid(board, row, col, num): # Ele não verifica o Sudoku por completo, ele so verifica se um número pode ser colocado ali
     # isValid(board, 4, 5, 7) Posso colocar o número 7 na linha 4, coluna 5?
+    
     # Linha 
     for c in range(SIZE):
         if board[row][c] == num: 
