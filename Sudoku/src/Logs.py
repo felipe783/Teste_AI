@@ -3,11 +3,14 @@ import os
 
 def saveResults(
     difficulty,
+    resolve,
     numBoards,
     solved,
     impossible,
     total_quadrants,
     total_coverage,
+    limit_attempts,
+    total_attempts,
     execution_time
 ):
 
@@ -16,17 +19,26 @@ def saveResults(
         2: "medio",
         3: "dificil"
     }
+    resolve_name = {
+        1: "Probabilidade sem Tentativa",
+        2: "Probabilidade com Tentativa",
+        3: "BackTraking" 
+    }
 
+    type = resolve_name[resolve]
     name = difficulty_names[difficulty]
 
     result = {
-        "dificuldade": name,
-        "jogos_gerados": numBoards,
-        "jogos_resolvidos": solved,
-        "jogos_impossiveis": impossible,
-        "media_quadrantes_corretos": total_quadrants / numBoards,
-        "media_cobertura": total_coverage / numBoards,
-        "tempo_total": execution_time
+    "dificuldade": name,
+    "tipo_resolucao": type,
+    "jogos_gerados": numBoards,
+    "jogos_resolvidos": solved,
+    "jogos_impossiveis": impossible,
+    "media_quadrantes_corretos": total_quadrants / numBoards,
+    "media_cobertura": total_coverage / numBoards,
+    "total_tentativas": total_attempts,
+    "limite_tentativas_por_game": limit_attempts,
+    "tempo_total": execution_time
     }
 
     file_path = "results.json"

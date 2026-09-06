@@ -90,13 +90,14 @@ def solveAttempt(board):
 
     return True
 
-def solveProbabilistic(board):  
+def solveSudoku_WithAttempt(board,limit_attempts):  
 
     attempts = 0
     original = [row[:] for row in board]
 
     while not checkVictory(board):
         attempts += 1
+        # print(attempts)
         for row in range(9):
             for col in range(9):
                 board[row][col] = original[row][col]
@@ -105,6 +106,53 @@ def solveProbabilistic(board):
 
         if result:
             print(f"Solução encontrada em {attempts} tentativas")
-            return board
+            return board, attempts
+        if attempts == limit_attempts:
+            print(f"Não foi possivel uma Solução em meno de {attempts} tentativas")
+            return board, attempts
+
+    return board, attempts
+
+def solveSudoku_WithOutAttempt(board):  
+
+    while not checkVictory(board):
+        row, col = findEmpty(board)
+        candidates = getCandidates(board, row, col)
+
+        if not candidates:
+            return False
+
+        weights = getWeights(board, candidates)
+        # number = random.choices(candidates,weights=weights,k=1)[0] # Esta linha sortea um elemento usando os Pesos, e pega o elemento da posição 0, o K é quantos numeros queremos retornar(no caso 1)
+        number = getNumber(candidates, weights)
+        board[row][col] = number
 
     return board
+
+def solveSudoku_Backtraking(board):
+
+    empty = findEmpty(board)
+
+    if empty is None:
+        return board
+
+    row, col = empty
+    candidates = getCandidates(board, row, col)
+    weights = getWeights(board, candidates)
+
+    while candidates:
+
+        number = getNumber(candidates, weights)
+        index = candidates.index(number)
+
+        candidates.pop(index)
+        weights.pop(index)
+
+        board[row][col] = number
+
+        if solveSudoku_Backtraking(board):
+            return board
+
+        board[row][col] = 0
+
+    return False
