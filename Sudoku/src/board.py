@@ -1,14 +1,21 @@
-def showBoard(board):
+def showBoard(board, original):
     print("┌───────┬───────┬───────┐")
+
     for i, line in enumerate(board):
         print("│", end=" ")
+
         for j, num in enumerate(line):
             if num == 0:
                 print("\033[90m.\033[0m", end=" ")
-            else:
+            elif original[i][j]:
+                # Número original
                 print(f"\033[92m{num}\033[0m", end=" ")
+            else:
+                # Número colocado pelo algoritmo
+                print(f"\033[94m{num}\033[0m", end=" ")
             if j == 2 or j == 5:
                 print("│", end=" ")
+
         print("│")
         if i == 2 or i == 5:
             print("├───────┼───────┼───────┤")

@@ -56,7 +56,24 @@ def getNumber(candidates, weights):
         if value < accumulated:
             return candidates[i]
 
-def solveProbabilistic(board):
+def checkQuadrants(board):
+    correct = 0
+
+    for start_row in range(0, 9, 3):
+        for start_col in range(0, 9, 3):
+
+            numbers = []
+
+            for row in range(start_row, start_row + 3):
+                for col in range(start_col, start_col + 3):
+                    numbers.append(board[row][col])
+
+            if sorted(numbers) == list(range(1, 10)):
+                correct += 1
+
+    return correct
+
+def solveProbabilistic(board):  
 
     while not checkVictory(board):
 

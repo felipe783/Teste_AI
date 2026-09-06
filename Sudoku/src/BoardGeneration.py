@@ -97,11 +97,11 @@ def generateSudoku(difficulty):
     generateSolution(board)
 
     # Quantidade de números
-    if difficulty == "easy":
+    if difficulty == 1:
         amount = NUMBERS_EASY
-    elif difficulty == "medium":
+    elif difficulty == 2:
         amount = NUMBERS_MEDIUM
-    elif difficulty == "hard":
+    elif difficulty == 3:
         amount = NUMBERS_HARD
     else:
         raise ValueError("Dificuldade inválida")
