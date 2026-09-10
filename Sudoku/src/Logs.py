@@ -34,11 +34,11 @@ def saveResults(
     "jogos_gerados": numBoards,
     "jogos_resolvidos": solved,
     "jogos_impossiveis": impossible,
-    "media_quadrantes_corretos": total_quadrants / numBoards,
-    "media_cobertura": total_coverage / numBoards,
+    "media_quadrantes_corretos": round(total_quadrants / numBoards, 2),
+    "media_cobertura": round(total_coverage / numBoards,2),
     "total_tentativas": total_attempts,
     "limite_tentativas_por_game": limit_attempts,
-    "tempo_total": execution_time
+    "tempo_total": round(execution_time/60, 2)
     }
 
     file_path = "results.json"
