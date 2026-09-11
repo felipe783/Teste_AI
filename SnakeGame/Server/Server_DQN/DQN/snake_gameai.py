@@ -18,11 +18,17 @@ class SnakeGameAI:
         self.h = h
         self.reset()
 
-    def reset(self):
+    def reset(self, w=None, h=None, snake_length=3, timeout_multiplier=100):
+        if w is not None:
+            self.w = w
+        if h is not None:
+            self.h = h
+        self.timeout_multiplier = timeout_multiplier
+
         self.direction = Direction.RIGHT
         self.head = Point(self.w // 2, self.h // 2)
-        self.snake = [self.head, Point(self.head.x - BLOCK_SIZE, self.head.y),
-                      Point(self.head.x - 2 * BLOCK_SIZE, self.head.y)]
+        self.snake = [Point(self.head.x - i * BLOCK_SIZE, self.head.y)
+                    for i in range(max(1, snake_length))]
         self.score = 0
         self.food = None
         self._place_food()
@@ -107,8 +113,9 @@ class SnakeGameAI:
         self.head = self._next_point(self.head, self.direction)
         self.snake.insert(0, self.head)
 
-        if self.is_collision() or self.frame_iteration > 100 * len(self.snake):
+        if self.is_collision() or self.frame_iteration > self.timeout_multiplier * len(self.snake):
             return -10.0, True, self.score
+        
         if self.head == self.food:
             self.score += 1
             self._place_food()
