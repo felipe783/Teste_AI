@@ -53,6 +53,7 @@ menu(
         "1": "Força Bruta (Probabilidade, para quando é impossível)",
         "2": "Força Bruta² (Probabilidade, só para quando ganha)",
         "3": "Usando o Cérebro (Backtracking)",
+        "4":"Constraint Satisfaction Problem (CSP) Ta sendo feito"
     },
     "MÉTODO DE RESOLUÇÃO"
 )
