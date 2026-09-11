@@ -13,10 +13,10 @@ class Direction(Enum):
 Point = namedtuple("Point", "x y")
 
 class SnakeGameAI:
-    def __init__(self, w=640, h=480):
+    def __init__(self, w=640, h=480, snake_length=3, timeout_multiplier=100):
         self.w = w
         self.h = h
-        self.reset()
+        self.reset(snake_length=snake_length, timeout_multiplier=timeout_multiplier)
 
     def reset(self, w=None, h=None, snake_length=3, timeout_multiplier=100):
         if w is not None:
