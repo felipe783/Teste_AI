@@ -256,6 +256,13 @@ class Agent:
         action[move] = 1
         return action
 
+    def boost_exploration(self, target_epsilon=EPSILON_BOOST_ON_PROMOTION):
+        """Reduz train_steps para forçar epsilon >= target_epsilon, sem nunca diminuir exploração."""
+        fraction_target = (target_epsilon - EPSILON_START) / (EPSILON_MIN - EPSILON_START)
+        target_steps = int(fraction_target * EPSILON_DECAY_STEPS)
+        if target_steps < self.trainer.train_steps:
+            self.trainer.train_steps = target_steps
+
 def train():
     agent, logger = Agent(), TrainingLogger()
     curriculum = CurriculumManager()
