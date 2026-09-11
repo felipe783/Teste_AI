@@ -29,11 +29,10 @@ LOG_FILE = os.path.join(LOG_DIR, "training_log.csv")
 LOG_MAX_SIZE_BYTES = 5 * 1024 * 1024 * 1024
 
 CURRICULUM_STAGES = [
-    # (w,   h,   comprimento_inicial, timeout_multiplicador, score_para_promover, janela)
-    (200, 200, 1, 200, 3.0,  100),
-    (320, 240, 2, 150, 6.0,  150),
-    (480, 360, 3, 120, 10.0, 200),
-    (640, 480, 3, 100, None, None),  # estágio final
+    (200, 200, 1, 8, 3.0,  100),
+    (320, 240, 2, 6, 6.0,  150),
+    (480, 360, 3, 5, 10.0, 200),
+    (640, 480, 3, 4, None, None),
 ]
 
 EPSILON_BOOST_ON_PROMOTION = 0.15

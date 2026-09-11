@@ -105,6 +105,15 @@ class SnakeGameAI:
         board_cells = (self.w // BLOCK_SIZE) * (self.h // BLOCK_SIZE)
         return len(self._reachable_area(self.head, set(self.snake[1:-1]))) / board_cells
 
+    def _timeout_budget(self):
+        """Folga proporcional à maior distância possível no tabuleiro (pior caso
+        pra chegar na comida) somada a uma folga de manobra proporcional ao
+        tamanho da cobra (espaço pra contornar o próprio corpo)."""
+        cells_w = self.w // BLOCK_SIZE
+        cells_h = self.h // BLOCK_SIZE
+        max_distance = cells_w + cells_h
+        return int(self.timeout_multiplier * (max_distance + len(self.snake)))
+
     def play_step(self, action):
         self.frame_iteration += 1
         old_distance = abs(self.head.x - self.food.x) + abs(self.head.y - self.food.y)
@@ -113,7 +122,7 @@ class SnakeGameAI:
         self.head = self._next_point(self.head, self.direction)
         self.snake.insert(0, self.head)
 
-        if self.is_collision() or self.frame_iteration > self.timeout_multiplier * len(self.snake):
+        if self.is_collision() or self.frame_iteration > self._timeout_budget():
             return -10.0, True, self.score
         
         if self.head == self.food:
