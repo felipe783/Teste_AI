@@ -106,12 +106,12 @@ def solveSudoku_WithAttempt(board,limit_attempts):
 
         if result:
             print(f"Solução encontrada em {attempts} tentativas")
-            return board, attempts
+            return board, attempts, True
         if attempts == limit_attempts:
-            print(f"Não foi possivel uma Solução em meno de {attempts} tentativas")
-            return board, attempts
+            print(f"Não foi possivel uma Solução em menos de {attempts} tentativas")
+            return board, attempts, False
 
-    return board, attempts
+    return board, attempts, False
 
 def solveSudoku_WithOutAttempt(board):  
 
@@ -120,21 +120,21 @@ def solveSudoku_WithOutAttempt(board):
         candidates = getCandidates(board, row, col)
 
         if not candidates:
-            return False
+            return board, False
 
         weights = getWeights(board, candidates)
         # number = random.choices(candidates,weights=weights,k=1)[0] # Esta linha sortea um elemento usando os Pesos, e pega o elemento da posição 0, o K é quantos numeros queremos retornar(no caso 1)
         number = getNumber(candidates, weights)
         board[row][col] = number
 
-    return board
+    return board, True
 
 def solveSudoku_Backtraking(board):
 
     empty = findEmpty(board)
 
     if empty is None:
-        return board
+        return board, True
 
     row, col = empty
     candidates = getCandidates(board, row, col)
@@ -151,7 +151,7 @@ def solveSudoku_Backtraking(board):
         board[row][col] = number
 
         if solveSudoku_Backtraking(board):
-            return board
+            return board, True
 
         board[row][col] = 0
 
