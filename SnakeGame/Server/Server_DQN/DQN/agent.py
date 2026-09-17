@@ -8,7 +8,6 @@ import numpy as np
 import torch
 from model import DEVICE, Linear_QNet, QTrainer
 from snake_gameai import BLOCK_SIZE, Direction, SnakeGameAI
-import json
 
 MAX_MEMORY = 100_000
 BATCH_SIZE = 256
@@ -28,57 +27,10 @@ LOG_DIR = "logs"
 LOG_FILE = os.path.join(LOG_DIR, "training_log.csv")
 LOG_MAX_SIZE_BYTES = 5 * 1024 * 1024 * 1024
 
-CURRICULUM_STAGES = [
-    (200, 200, 1, 8, 3.0,  100),
-    (320, 240, 2, 6, 6.0,  150),
-    (480, 360, 3, 5, 10.0, 200),
-    (640, 480, 3, 4, None, None),
-]
-
-EPSILON_BOOST_ON_PROMOTION = 0.15
-STAGE_LOG_FILE = os.path.join(LOG_DIR, "stages.json")
-
-class CurriculumManager:
-    def __init__(self):
-        self.stage = 0
-        self.recent_scores = deque(maxlen=CURRICULUM_STAGES[0][5] or 1)
-
-    @property
-    def dims(self):
-        w, h, _, _, _, _ = CURRICULUM_STAGES[self.stage]
-        return w, h
-
-    @property
-    def snake_length(self):
-        return CURRICULUM_STAGES[self.stage][2]
-
-    @property
-    def timeout_multiplier(self):
-        return CURRICULUM_STAGES[self.stage][3]
-
-    def reset_kwargs(self):
-        w, h = self.dims
-        return {"w": w, "h": h, "snake_length": self.snake_length,
-                "timeout_multiplier": self.timeout_multiplier}
-
-    def record(self, score):
-        self.recent_scores.append(score)
-        threshold = CURRICULUM_STAGES[self.stage][4]
-        if threshold is None:
-            return False
-        if len(self.recent_scores) == self.recent_scores.maxlen and mean(self.recent_scores) >= threshold:
-            self.stage += 1
-            next_window = CURRICULUM_STAGES[self.stage][5] or 1
-            self.recent_scores = deque(maxlen=next_window)
-            return True
-        return False
 
 class TrainingLogger:
     def __init__(self):
         self.total_games = self.record = 0
-        self.current_stage = 0
-        self.stage_start_game = 1
-        self.stage_scores = []
         os.makedirs(LOG_DIR, exist_ok=True)
 
         if os.path.exists(LOG_FILE):
@@ -94,10 +46,9 @@ class TrainingLogger:
         self.total_games = max(self.total_games, agent.n_game)
         self.record = max(self.record, agent.record)
 
-    def log_game(self, score, epsilon, difficulty):
+    def log_game(self, score, epsilon):
         self.total_games += 1
         self.record = max(self.record, score)
-        self.stage_scores.append(score)
 
         if os.path.exists(LOG_FILE) and os.path.getsize(LOG_FILE) >= LOG_MAX_SIZE_BYTES:
             os.remove(LOG_FILE)
@@ -106,45 +57,11 @@ class TrainingLogger:
         with open(LOG_FILE, "a", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             if not exists:
-                writer.writerow(["partida", "score", "max", "epsilon", "dificuldade"])
-            writer.writerow([self.total_games, score, self.record, f"{epsilon:.5f}", difficulty])
+                writer.writerow(["partida", "score", "max", "epsilon"])
+            writer.writerow([self.total_games, score, self.record, f"{epsilon:.5f}"])
 
-        print(f"Partida: {self.total_games} | Score: {score} | Max: {self.record} | "
-              f"Epsilon: {epsilon:.4f} | Dificuldade: {difficulty}", flush=True)
+        print(f"Partida: {self.total_games} | Score: {score} | Max: {self.record} | " f"Epsilon: {epsilon:.4f}", flush=True)
 
-    def log_stage_change(self, old_dims, new_stage):
-        """Fecha o resumo do estágio que terminou e começa a contagem do próximo."""
-        if self.stage_scores:
-            summary = {
-                "estagio": self.current_stage,
-                "largura": old_dims[0],
-                "altura": old_dims[1],
-                "partida_inicial": self.stage_start_game,
-                "partida_final": self.total_games,
-                "total_partidas": len(self.stage_scores),
-                "score_medio": round(mean(self.stage_scores), 2),
-                "score_mediano": round(median(self.stage_scores), 2),
-                "score_maximo": max(self.stage_scores),
-            }
-            self._append_stage_summary(summary)
-
-        self.current_stage = new_stage
-        self.stage_start_game = self.total_games + 1
-        self.stage_scores = []
-
-    @staticmethod
-    def _append_stage_summary(summary):
-        data = []
-        if os.path.exists(STAGE_LOG_FILE):
-            try:
-                with open(STAGE_LOG_FILE, "r", encoding="utf-8") as file:
-                    data = json.load(file)
-            except (json.JSONDecodeError, OSError):
-                data = []
-        data.append(summary)
-        with open(STAGE_LOG_FILE, "w", encoding="utf-8") as file:
-            json.dump(data, file, ensure_ascii=False, indent=2)
-    
 class Agent:
     def __init__(self, load_checkpoint=True):
         self.n_game = self.record = 0
@@ -256,19 +173,9 @@ class Agent:
         action[move] = 1
         return action
 
-    def boost_exploration(self, target_epsilon=EPSILON_BOOST_ON_PROMOTION):
-        """Reduz train_steps para forçar epsilon >= target_epsilon, sem nunca diminuir exploração."""
-        fraction_target = (target_epsilon - EPSILON_START) / (EPSILON_MIN - EPSILON_START)
-        target_steps = int(fraction_target * EPSILON_DECAY_STEPS)
-        if target_steps < self.trainer.train_steps:
-            self.trainer.train_steps = target_steps
-
 def train():
-    agent, logger = Agent(), TrainingLogger()
-    curriculum = CurriculumManager()
+    agent, logger, game = Agent(), TrainingLogger(), SnakeGameAI()
     logger.sync_with_agent(agent)
-
-    game = SnakeGameAI(**curriculum.reset_kwargs())
     print(f"Treinamento DQN iniciado em CPU | modelo: {MODEL_PATH}", flush=True)
 
     try:
@@ -279,38 +186,21 @@ def train():
             state_new = agent.get_state(game)
             agent.train_short_memory(state_old, action, reward, state_new, done)
             agent.remember(state_old, action, reward, state_new, done)
-
             if done:
-                stage_before, dims_before = curriculum.stage, curriculum.dims
-                promoted = curriculum.record(score)
-
+                game.reset()
                 agent.n_game += 1
                 agent.train_long_memory()
-
                 new_record = score > agent.record
                 if new_record:
                     agent.record = score
                     print(f"Novo recorde: {score}", flush=True)
-
-                difficulty_label = f"{stage_before}_{dims_before[0]}x{dims_before[1]}"
-                logger.log_game(score, agent.epsilon, difficulty_label)
-
-                if promoted:
-                    logger.log_stage_change(dims_before, curriculum.stage)
-                    agent.boost_exploration()
-                    w, h = curriculum.dims
-                    print(f"Curriculum: promovido para estágio {curriculum.stage} "
-                          f"({w}x{h}, cobra inicial={curriculum.snake_length}, "
-                          f"timeout_mult={curriculum.timeout_multiplier}, "
-                          f"epsilon={agent.epsilon:.3f})", flush=True)
-
-                game.reset(**curriculum.reset_kwargs())
-
+                logger.log_game(score, agent.epsilon)
                 if new_record or agent.n_game % CHECKPOINT_EVERY_GAMES == 0:
                     agent.save_checkpoint()
     except KeyboardInterrupt:
         print("\nTreinamento interrompido; salvando continuidade...", flush=True)
         agent.save_checkpoint()
+
 
 def evaluate(episodes):
     agent = Agent()

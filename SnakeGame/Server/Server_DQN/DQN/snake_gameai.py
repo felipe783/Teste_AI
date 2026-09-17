@@ -13,22 +13,16 @@ class Direction(Enum):
 Point = namedtuple("Point", "x y")
 
 class SnakeGameAI:
-    def __init__(self, w=640, h=480, snake_length=3, timeout_multiplier=100):
+    def __init__(self, w=640, h=480):
         self.w = w
         self.h = h
-        self.reset(snake_length=snake_length, timeout_multiplier=timeout_multiplier)
+        self.reset()
 
-    def reset(self, w=None, h=None, snake_length=3, timeout_multiplier=100):
-        if w is not None:
-            self.w = w
-        if h is not None:
-            self.h = h
-        self.timeout_multiplier = timeout_multiplier
-
+    def reset(self):
         self.direction = Direction.RIGHT
         self.head = Point(self.w // 2, self.h // 2)
-        self.snake = [Point(self.head.x - i * BLOCK_SIZE, self.head.y)
-                    for i in range(max(1, snake_length))]
+        self.snake = [self.head, Point(self.head.x - BLOCK_SIZE, self.head.y),
+                      Point(self.head.x - 2 * BLOCK_SIZE, self.head.y)]
         self.score = 0
         self.food = None
         self._place_food()
@@ -105,15 +99,6 @@ class SnakeGameAI:
         board_cells = (self.w // BLOCK_SIZE) * (self.h // BLOCK_SIZE)
         return len(self._reachable_area(self.head, set(self.snake[1:-1]))) / board_cells
 
-    def _timeout_budget(self):
-        """Folga proporcional à maior distância possível no tabuleiro (pior caso
-        pra chegar na comida) somada a uma folga de manobra proporcional ao
-        tamanho da cobra (espaço pra contornar o próprio corpo)."""
-        cells_w = self.w // BLOCK_SIZE
-        cells_h = self.h // BLOCK_SIZE
-        max_distance = cells_w + cells_h
-        return int(self.timeout_multiplier * (max_distance + len(self.snake)))
-
     def play_step(self, action):
         self.frame_iteration += 1
         old_distance = abs(self.head.x - self.food.x) + abs(self.head.y - self.food.y)
@@ -122,9 +107,8 @@ class SnakeGameAI:
         self.head = self._next_point(self.head, self.direction)
         self.snake.insert(0, self.head)
 
-        if self.is_collision() or self.frame_iteration > self._timeout_budget():
+        if self.is_collision() or self.frame_iteration > 100 * len(self.snake):
             return -10.0, True, self.score
-        
         if self.head == self.food:
             self.score += 1
             self._place_food()
