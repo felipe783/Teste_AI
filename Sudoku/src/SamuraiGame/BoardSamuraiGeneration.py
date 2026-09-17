@@ -1,15 +1,15 @@
 import random 
-import core.config as core
+import core.config as core 
 
 def isValid(board, row, col, num): # Ele não verifica o Sudoku por completo, ele so verifica se um número pode ser colocado ali
     # isValid(board, 4, 5, 7) Posso colocar o número 7 na linha 4, coluna 5?
 
     # Linha 
-    for c in range(core.SIZE):
+    for c in range(core.SAMURAI_SIZE):
         if board[row][c] == num: 
             return False
     # Coluna
-    for r in range(core.SIZE):
+    for r in range(core.SAMURAI_SIZE):
         if board[r][col] == num:
             return False
 
@@ -24,8 +24,8 @@ def isValid(board, row, col, num): # Ele não verifica o Sudoku por completo, el
     return True
 
 def findEmpty(board):
-    for row in range(core.SIZE):
-        for col in range(core.SIZE):
+    for row in range(core.SAMURAI_SIZE):
+        for col in range(core.SAMURAI_SIZE):
             if board[row][col] == 0:
                 return row, col
 
@@ -40,8 +40,8 @@ def removerNumbers(board, amount):
     """
     positions = [ # Pega cada posição e add na Lista (0,0), (0,1)...
         (row, col)   # A cada rodada do for isso add o valor
-        for row in range(core.SIZE) 
-        for col in range(core.SIZE)
+        for row in range(9) 
+        for col in range(9)
     ]
 
     # print(positions)
@@ -94,11 +94,11 @@ def generateSudoku(difficulty):
 
     # Quantidade de números
     if difficulty == 1:
-        amount = core.NUMBERS_EASY
+        amount = core.SAMURAI_NUMBERS_EASY
     elif difficulty == 2:
-        amount = core.NUMBERS_MEDIUM
+        amount = core.SAMURAI_NUMBERS_MEDIUM
     elif difficulty == 3:
-        amount = core.NUMBERS_HARD
+        amount = core.SAMURAI_NUMBERS_HARD
     else:
         raise ValueError("Dificuldade inválida")
 

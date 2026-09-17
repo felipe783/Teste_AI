@@ -53,7 +53,7 @@ menu(
         "1": "Força Bruta (Probabilidade, para quando é impossível)",
         "2": "Força Bruta² (Probabilidade, só para quando ganha)",
         "3": "Usando o Cérebro (Backtracking)",
-        "4":"Constraint Satisfaction Problem (CSP) Ta sendo feito"
+        "4": "CSP (Constraint Satisfaction Problem)"
     },
     "MÉTODO DE RESOLUÇÃO"
 )
@@ -63,7 +63,13 @@ limit_attempts = "Nao tem limite de Tentativas"
 if resolve == 2:
     secao("LIMITE DE TENTATIVAS")
     limit_attempts = int(input(f"{Cor.AMARELO}Fale o limite de tentativas: {Cor.RESET}"))
-
+if resolve == 4:
+    menu({"1": "SIM", "2": "NAO"}, "DESEJA O DESAFIO?")
+    challenge = int(input(f"{Cor.AMARELO}Fale: {Cor.RESET}"))
+    if challenge == 1:
+        secao(" DESAFIO ")
+    else:
+        challenge = 0
 
 inicio = time.time()
 
