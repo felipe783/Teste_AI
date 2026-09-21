@@ -1,5 +1,3 @@
-SAMURAI_NUMBERS_HARD = 250
-
 SAMURAI_CONFIG = [
     ("SUDOKU_A", (0, 12)),   # Linha inicial, coluna inicial
     ("SUDOKU_B", (6, 18)),
@@ -11,6 +9,7 @@ SAMURAI_CONFIG = [
     ("SUDOKU_H", (18, 18)),
     ("SUDOKU_I", (24, 12)),
 ]
+GRID_SIZE = 33
 
 SIZE = 9
 NUMBERS_EASY = 40
