@@ -1,108 +1,109 @@
-import random 
-import core.config as core 
+import random
+import core.config as core
 
-def isValid(board, row, col, num): # Ele não verifica o Sudoku por completo, ele so verifica se um número pode ser colocado ali
-    # isValid(board, 4, 5, 7) Posso colocar o número 7 na linha 4, coluna 5?
+class Cor:
+    RESET = "\033[0m"
+    CINZA = "\033[90m"
 
-    # Linha 
-    for c in range(core.SAMURAI_SIZE):
-        if board[row][c] == num: 
+def createGridSamurai():
+    grid = [[None for _ in range(core.GRID_SIZE)] for _ in range(core.GRID_SIZE)]
+    for _, (row, col) in core.SAMURAI_CONFIG:
+        for i in range(9):
+            for j in range(9):
+                grid[row + i][col + j] = 0
+    return grid
+
+def isValidSamuraiSub(board, row, col, num, startRow, startCol):
+    # Linha
+    for c in range(startCol, startCol + 9):
+        if board[row][c] == num:
             return False
     # Coluna
-    for r in range(core.SAMURAI_SIZE):
+    for r in range(startRow, startRow + 9):
         if board[r][col] == num:
             return False
-
     # Bloco 3x3
-    startRow = (row // 3) * 3 # Row = 7 --> 7//3 = 2 --> 3 * 2 = 6, A linha vai começar na posição 6
-    startCol = (col // 3) * 3 # A Coluna tbm vai começar na posição 6
-
-    for r in range(startRow, startRow + 3): # (6 , 9)
-        for c in range(startCol, startCol + 3):
+    localRow, localCol = row - startRow, col - startCol
+    blockRow, blockCol = startRow + (localRow // 3) * 3, startCol + (localCol // 3) * 3
+    for r in range(blockRow, blockRow + 3):
+        for c in range(blockCol, blockCol + 3):
             if board[r][c] == num:
                 return False
     return True
 
-def findEmpty(board):
-    for row in range(core.SAMURAI_SIZE):
-        for col in range(core.SAMURAI_SIZE):
+def isValidSamuraiGlobally(board, row, col, num):
+    for _, (startRow, startCol) in core.SAMURAI_CONFIG:
+        if (startRow <= row < startRow + 9 and startCol <= col < startCol + 9):
+            if not isValidSamuraiSub(board, row, col, num, startRow, startCol):
+                return False
+    return True
+
+def findEmptySamurai(board):
+    minOptions = 10
+    bestCell = None
+    bestValidNumbers = []
+
+    for row in range(core.GRID_SIZE):
+        for col in range(core.GRID_SIZE):
             if board[row][col] == 0:
-                return row, col
+                validNumbers = [num for num in range(1, 10) if isValidSamuraiGlobally(board, row, col, num)]
+                numOptions = len(validNumbers)
 
-    return None
+                if numOptions == 0:
+                    return row, col, []
+                if numOptions < minOptions:
+                    minOptions = numOptions
+                    bestCell = (row, col)
+                    bestValidNumbers = validNumbers
+                    if minOptions == 1:
+                        return bestCell[0], bestCell[1], bestValidNumbers
+                        
+    if bestCell:
+        return bestCell[0], bestCell[1], bestValidNumbers
+    return None, None, None
 
-def removerNumbers(board, amount):
-    """
+def solveSamurai_Backtracking(board):
+    row, col, validNums = findEmptySamurai(board)
+    if row is None:
+        return True
+    if not validNums:
+        return False
+        
+    random.shuffle(validNums)
+    for num in validNums:
+        board[row][col] = num
+        if solveSamurai_Backtracking(board):
+            return True
+        board[row][col] = 0
+    return False
+
+def removeNumbersSamurai(board, amount):
     positions = []
-        for row in range(9):
-            for col in range(9):
+    for row in range(len(board)):
+        for col in range(len(board[0])):
+            if board[row][col] != 0 and board[row][col] is not None:
                 positions.append((row, col))
-    """
-    positions = [ # Pega cada posição e add na Lista (0,0), (0,1)...
-        (row, col)   # A cada rodada do for isso add o valor
-        for row in range(9) 
-        for col in range(9)
-    ]
+                
+    random.shuffle(positions) 
+    currentNumbers = len(positions)
 
-    # print(positions)
-
-    random.shuffle(positions) # Embaralhar as posições para ter diferentes posicações retirada pra cada Sudoku
-    currentNumbers = 81
-
-    for row, col in positions: # Pega um posição aleatoria
-        if currentNumbers <= amount: # Quando tiver menos que o ideal ele para
+    for row, col in positions:
+        if currentNumbers <= amount: 
             break
         board[row][col] = 0
         currentNumbers -= 1
     return board
 
-def generateSolution(board):
-    empty = findEmpty(board)
+def generateSamurai(difficulty):
+    print(f"\n{Cor.CINZA}Gerando tabuleiro Samurai (pode levar alguns segundos)...{Cor.RESET}")
+    grid = createGridSamurai()
+    
+    # Mapeando dificuldade para a quantidade de números que sobram (exemplo)
+    if difficulty == 1: amount = 300
+    elif difficulty == 2: amount = 200
+    else: amount = getattr(core, 'SAMURAI_NUMBERS_HARD', 120)
 
-    if empty is None:
-        return True
-
-    row, col = empty # Onde precisa colocar no Número
-    numbers = list(range(1, 10)) 
-    random.shuffle(numbers) # Garante que o Sudoku seja diferente um do outro
-
-    for num in numbers:
-        if isValid(board, row, col, num):  # Tentativa e ERRO se ela não achar a Sequencia certa ela volta pro começo
-            board[row][col] = num
-            if generateSolution(board):
-                return True
-
-            board[row][col] = 0
-
-    return False
-
-def generateSudoku(difficulty):
-    """
-    board = []
-    for _ in range(9):
-        row = []
-        for _ in range(9):
-            row.append(0)
-        board.append(row)
-    """
-    board = [
-        [0 for _ in range(9)] 
-        for _ in range(9)
-    ]
-    # Gera solução completa
-    generateSolution(board)
-
-    # Quantidade de números
-    if difficulty == 1:
-        amount = core.SAMURAI_NUMBERS_EASY
-    elif difficulty == 2:
-        amount = core.SAMURAI_NUMBERS_MEDIUM
-    elif difficulty == 3:
-        amount = core.SAMURAI_NUMBERS_HARD
-    else:
-        raise ValueError("Dificuldade inválida")
-
-    # Remove números
-    removerNumbers(board, amount)
-
-    return board
+    if solveSamurai_Backtracking(grid):
+        puzzleGrid = removeNumbersSamurai(grid, amount)
+        return puzzleGrid
+    return grid

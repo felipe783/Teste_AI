@@ -48,17 +48,3 @@ def checkVictory(board):
             if sorted(numbers) != list(range(1, 10)):
                 return False
     return True
-    """
-    for row_start in range(0, 9, 3):
-        for column_start in range(0, 9, 3):
-
-            numbers = [
-                board[row][column].value
-                for row in range(row_start, row_start + 3)
-                for column in range(column_start, column_start + 3)
-            ]
-
-            if sorted(numbers) != list(range(1, 10)):
-                return False
-    return True
-    """

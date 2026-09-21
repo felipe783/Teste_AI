@@ -1,11 +1,14 @@
+import time
+import core.config as core
+
+from src.SamuraiGame.BoardSamuraiGeneration import *
+from src.SamuraiGame.SamuraiBoard import *
 from src.Board import *
 from src.BoardGeneration import *
 from src.Probability import *
 from src.Logs import *
 
-import time
-
-# ---------- Cores ANSI (opcional, funciona na maioria dos terminais) ----------
+# ---------- Cores ANSI ----------
 class Cor:
     RESET = "\033[0m"
     BOLD = "\033[1m"
@@ -17,7 +20,6 @@ class Cor:
     CINZA = "\033[90m"
 
 LARGURA = 50
-
 
 def linha(char="-", cor=Cor.CINZA):
     print(f"{cor}{char * LARGURA}{Cor.RESET}")
@@ -37,33 +39,42 @@ def menu(opcoes: dict, titulo_menu: str):
         print(f"  {Cor.AMARELO}{chave}{Cor.RESET} - {valor}")
     linha("-")
 
-# ---------------------- Configuração Inicial ----------------------
+
+# MAIN FLOW
+
 titulo("SUDOKU SOLVER")
+
+menu(
+    {"1": "Sudoku Tradicional (9x9)", "2": "Sudoku Samurai (33x33)"},
+    "TIPO DE JOGO"
+)
+tipo_jogo = int(input(f"{Cor.BOLD}Escolha o modo: {Cor.RESET}"))
 
 numBoards = int(input(f"\n{Cor.BOLD}Número de jogos que deseja: {Cor.RESET}"))
 
-menu(
-    {"1": "Fácil", "2": "Médio", "3": "Difícil"},
-    "DIFICULDADE"
-)
+menu({"1": "Fácil", "2": "Médio", "3": "Difícil"}, "DIFICULDADE")
 difficulty = int(input(f"{Cor.BOLD}Escolha a dificuldade: {Cor.RESET}"))
 
-menu(
-    {
-        "1": "Força Bruta (Probabilidade, para quando é impossível)",
-        "2": "Força Bruta² (Probabilidade, só para quando ganha)",
-        "3": "Usando o Cérebro (Backtracking)",
-        "4": "CSP (Constraint Satisfaction Problem)"
-    },
-    "MÉTODO DE RESOLUÇÃO"
-)
-resolve = int(input(f"{Cor.BOLD}Escolha o método: {Cor.RESET}"))
+# O Samurai tem uma matriz complexa que inviabiliza as lógicas de "probabilidade" pura feitas para o 9x9.
+if tipo_jogo == 1:
+    menu({
+        "1": "Probabilidade com 1 Tentativa",
+        "2": "Probabilidade com N Tentativas",
+        "3": "BackTraking",
+    }, "MÉTODO DE RESOLUÇÃO")
+    resolve = int(input(f"{Cor.BOLD}Escolha o método: {Cor.RESET}"))
+else:
+    print(f"\n{Cor.AMARELO}{Cor.BOLD}[!] O Sudoku Samurai requer regras de Backtracking estrutural.{Cor.RESET}")
+    print(f"{Cor.AMARELO}[!] Método de Resolução definido automaticamente para: Usando o Backtracking.{Cor.RESET}")
+    resolve = 3
 
 limit_attempts = "Nao tem limite de Tentativas"
-if resolve == 2:
+if resolve == 2 and tipo_jogo == 1:
     secao("LIMITE DE TENTATIVAS")
     limit_attempts = int(input(f"{Cor.AMARELO}Fale o limite de tentativas: {Cor.RESET}"))
-if resolve == 4:
+    
+challenge = 0
+if resolve == 4 and tipo_jogo == 1:
     menu({"1": "SIM", "2": "NAO"}, "DESEJA O DESAFIO?")
     challenge = int(input(f"{Cor.AMARELO}Fale: {Cor.RESET}"))
     if challenge == 1:
@@ -86,40 +97,61 @@ try:
         titulo(f"JOGO {i + 1} / {numBoards}", Cor.AZUL)
         gamesPlayed += 1
 
-        board = generateSudoku(difficulty)
-        original = [
-            [num != 0 for num in row]
-            for row in board
-        ]
+        if tipo_jogo == 1:
+            # Fluxo Tradicional 9x9
+            board = generateSudoku(difficulty)
+            original = [[num != 0 for num in row] for row in board]
+            
+            secao("Board Inicial")
+            showBoard(board, original)
 
-        secao("Board Inicial")
-        showBoard(board, original)
+            if resolve == 1:
+                result = solveSudoku_WithOutAttempt(board)
+            elif resolve == 2:
+                result, attempts = solveSudoku_WithAttempt(board, limit_attempts)
+                totalAttempts += attempts
+            elif resolve == 3:
+                result = solveSudoku_Backtraking(board)
+            elif resolve == 4:
+                pass # Substitua pela sua chamada CSP real
+                
+            secao("Board Final")
+            showBoard(board, original)
 
-        # Escolhe o método de resolução
-        if resolve == 1:
-            result = solveSudoku_WithOutAttempt(board)
-
-        elif resolve == 2:
-            result, attempts = solveSudoku_WithAttempt(board, limit_attempts)
-            totalAttempts += attempts
-
-        elif resolve == 3:
-            result = solveSudoku_Backtraking(board)
+            correctQuadrants = checkQuadrants(board)
+            coverage = (correctQuadrants / 9) * 100
+            totalQuadrants += correctQuadrants
+            totalCoverage += coverage
 
         else:
-            print(f"\n{Cor.VERMELHO}{Cor.BOLD}Método de resolução inválido!{Cor.RESET}")
-            break
+            # Fluxo Samurai 33x33
+            board = generateSamurai(difficulty)
+            # Para renderização: mapeia células válidas e que não estão vazias como Originais
+            original = [[(num != 0 and num is not None) for num in row] for row in board]
+            
+            secao("Board Inicial (Samurai)")
+            showBoardSamurai(board, original)
 
-        secao("Board Final")
-        showBoard(board, original)
+            result = solveSamurai_Backtracking(board)
 
-        # Calcula os quadrantes corretos
-        correctQuadrants = checkQuadrants(board)
-        coverage = (correctQuadrants / 9) * 100
-        totalQuadrants += correctQuadrants
-        totalCoverage += coverage
+            secao("Board Final (Samurai)")
+            showBoardSamurai(board, original)
 
-        # Verifica se resolveu
+            # Cálculo de Cobertura para o Samurai
+            celulas_preenchidas = 0
+            celulas_totais = 0
+            for r in range(core.GRID_SIZE):
+                for c in range(core.GRID_SIZE):
+                    if board[r][c] is not None:
+                        celulas_totais += 1
+                        if board[r][c] != 0:
+                            celulas_preenchidas += 1
+                            
+            coverage = (celulas_preenchidas / celulas_totais) * 100 if celulas_totais > 0 else 0
+            totalCoverage += coverage
+            totalQuadrants += 9 # Apenas para fins de visualização nos logs finais
+
+        # Status de Finalização
         if result:
             solved += 1
             status = f"{Cor.VERDE}{Cor.BOLD}✔ RESOLVIDO{Cor.RESET}"
@@ -129,13 +161,12 @@ try:
 
         secao("Resultado")
         print(f"  Status:              {status}")
-        print(f"  Quadrantes corretos: {Cor.AMARELO}{correctQuadrants}/9{Cor.RESET}")
+        if tipo_jogo == 1:
+            print(f"  Quadrantes corretos: {Cor.AMARELO}{correctQuadrants}/9{Cor.RESET}")
         print(f"  Cobertura:           {Cor.AMARELO}{coverage:.2f}%{Cor.RESET}")
         print()
 
-
 finally:
-
     fim = time.time()
     execution_time = fim - inicio
 
@@ -143,13 +174,16 @@ finally:
     print(f"  Jogos disputados:     {gamesPlayed}")
     print(f"  Resolvidos:           {Cor.VERDE}{solved}{Cor.RESET}")
     print(f"  Impossíveis:          {Cor.VERMELHO}{impossible}{Cor.RESET}")
-    print(f"  Tentativas:           {Cor.VERMELHO}{totalAttempts}{Cor.RESET}")
+    
+    if tipo_jogo == 1:
+        print(f"  Tentativas:           {Cor.VERMELHO}{totalAttempts}{Cor.RESET}")
+        
     if gamesPlayed:
         print(f"  Cobertura média:      {Cor.AMARELO}{totalCoverage / gamesPlayed:.2f}%{Cor.RESET}")
+        
     print(f"  Tempo total:          {execution_time:.2f}s")
     linha("=", Cor.VERDE)
 
-    # Salva os resultados mesmo se apertar Ctrl+C
     saveResults(
         difficulty,
         resolve,
