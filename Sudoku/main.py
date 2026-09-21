@@ -207,15 +207,14 @@ difficulty = int(input(f"{Cor.BOLD}Escolha a dificuldade: {Cor.RESET}"))
 # O Samurai tem uma matriz complexa que inviabiliza as lógicas de "probabilidade" pura feitas para o 9x9.
 if tipo_jogo == 1:
     menu({
-        "1": "Força Bruta (Probabilidade, impossível)",
-        "2": "Força Bruta² (Probabilidade, vitória)",
-        "3": "Usando o Cérebro (Backtracking)",
-        "4": "CSP (Constraint Satisfaction Problem)"
+        "1": "Probabilidade com 1 Tentativa",
+        "2": "Probabilidade com N Tentativas",
+        "3": "BackTraking",
     }, "MÉTODO DE RESOLUÇÃO")
     resolve = int(input(f"{Cor.BOLD}Escolha o método: {Cor.RESET}"))
 else:
     print(f"\n{Cor.AMARELO}{Cor.BOLD}[!] O Sudoku Samurai requer regras de Backtracking estrutural.{Cor.RESET}")
-    print(f"{Cor.AMARELO}[!] Método de Resolução definido automaticamente para: Usando o Cérebro (Backtracking).{Cor.RESET}")
+    print(f"{Cor.AMARELO}[!] Método de Resolução definido automaticamente para: Usando o Backtracking.{Cor.RESET}")
     resolve = 3
 
 limit_attempts = "Nao tem limite de Tentativas"
