@@ -19,11 +19,11 @@ def isValid(board, row, col, num, size): # Ele não verifica o Sudoku por comple
     startRow = (row // square) * square # Row = 7 --> 7//3 = 2 --> 3 * 2 = 6, A linha vai começar na posição 6
     startCol = (col // square) * square # A Coluna tbm vai começar na posição 6
 
-    for r in range(startRow, startRow + square): # (6 , 9)
-        for c in range(startCol, startCol + square):
+    for r in range(startRow, startRow + square): # ( 6 , 9)
+        for c in range(startCol, startCol + square): # ( 6, 9 )
             if board[r][c] == num:
                 return False
-    return True
+    return True # é valido o Número ali
 
 def findEmpty(board, size):
     minOptions = size + 1
@@ -32,26 +32,28 @@ def findEmpty(board, size):
 
     for row in range(size):
         for col in range(size):
-            if board[row][col] == 0:
+            if board[row][col] == 0: # So as vazias
 
                 candidates = [
-                    num
+                    # Se num no range de size + 1 pode ser colocado na Celula
+                    # List comprehension, [item for item in iterável if ...] 
+                    num # ADD o número em cadidates
                     for num in range(1, size + 1)
                     if isValid(board, row, col, num, size)
                 ]
 
-                # Nenhuma possibilidade para essa célula
+                # Nenhuma possibilidade a Celula
                 if not candidates:
-                    return row, col, []
-                if len(candidates) < minOptions:
-                    minOptions = len(candidates)
-                    bestCell = (row, col)
-                    bestCandidates = candidates
-                    # Não existe célula melhor que uma com 1 candidato
-                    if minOptions == 1:
-                        return row, col, candidates
+                    return row, col, [] # Sudoku impossivel
+                if len(candidates) < minOptions: # Sempre guarda a Menor celula
+                    minOptions = len(candidates) 
+                    bestCell = (row, col) # é a melhor celula bestcell = (1 , 2)
+                    bestCandidates = candidates 
 
-    # Não existem células vazias
+                    if minOptions == 1: # Nao existe Celula melhor que uma com 1 candidato
+                        return row, col, candidates # (1 linhas, 2 colunas , [3 , 4])
+
+    # Nao existem Celula vazias
     if bestCell is None:
         return None
 
@@ -62,14 +64,13 @@ def removerNumbers(board, amount, size):
         (row, col)
         for row in range(size)
         for col in range(size)
-        if board[row][col] != 0 and board[row][col] is not None
+        if board[row][col] != 0 and board[row][col] is not None # Todas que estão preenchidas
     ]
 
-    random.shuffle(positions)
-
+    random.shuffle(positions) # Randomizar o número pego
     currentNumbers = len(positions)
 
-    for row, col in positions: # Pega um posição aleatoria
+    for row, col in positions: # positon = [(1,2), (7,8) , (3,9)..... (linha N, coluna N)]
         if currentNumbers <= amount: # Quando tiver menos que o ideal ele para
             break
         board[row][col] = 0
@@ -78,7 +79,7 @@ def removerNumbers(board, amount, size):
 
 def generateSudoku(removeCells, size):
 
-    board = [
+    board = [ # Criar o Board so com 0
         [0 for _ in range(size)] 
         for _ in range(size)
     ]
@@ -95,22 +96,24 @@ def generateSudoku(removeCells, size):
 
 def generateSolution(board,size):
     # print("Gerando")
-    empty = findEmpty(board, size)
+    empty = findEmpty(board, size) 
     
-    if empty is None:
+    if empty is None: # Jogo finalizado
         return True
 
-    row, col, candidates = empty 
-    if not candidates:
+    row, col, candidates = empty # (linha X, coluna X , [ Candidato 1 ... Canditado N ])
+
+    if not candidates: # Impossivel
         return False
 
-    random.shuffle(candidates)
+    random.shuffle(candidates) # Pegar um Canditado aleatorio
 
     for num in candidates:
         board[row][col] = num
 
         if generateSolution(board, size):
-            return True
+            return True # Finalizar se achou a solução
+        
         board[row][col] = 0
 
     return False

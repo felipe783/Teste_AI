@@ -1,5 +1,6 @@
 import math
-import random
+
+# TODO: Este Board é estilização 
 
 def _blockDims(size):
     """Encontra (block_rows, block_cols) tal que block_rows * block_cols == size,
@@ -52,7 +53,7 @@ def showBoard(board, original, size):
 
 def checkVictory(board, size):  
 
-    square = math.isqrt(size)
+    square = math.isqrt(size) # Raiz
 
     for row in board:  # Linha
         # Pega uma Lista(row) e comprime em outra lista(numbers)

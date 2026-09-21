@@ -144,7 +144,7 @@ try:
             if resolve == 1:
                 result = solveSudoku_WithOutAttempt(board, SIZE)
             elif resolve == 2:
-                result, attempts = solveSudoku_WithAttempt(board, limit_attempts, SIZE)
+                result, attempts, _ = solveSudoku_WithAttempt(board, limit_attempts, SIZE)
                 totalAttempts += attempts
             elif resolve == 3:
                 result = solveSudoku_Backtraking(board, SIZE)

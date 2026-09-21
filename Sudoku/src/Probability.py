@@ -9,9 +9,9 @@ def getCandidates(board, row , col, size):
         if isValid(board, row, col, num, size):
             candidates.append(num)
 
-    return candidates
+    return candidates 
 
-def checkNumberDuplicates(board, candidates,size): # Ver quantas vezes o Número se repete  
+def checkNumberDuplicates(board, candidates,size): # Ver quantas vezes o Número se repete no Sudoku
     times = []
 
     for candidate in candidates:
@@ -44,16 +44,17 @@ def getProbability(weights):
 
     return probability
 
-def getNumber(candidates, weights):
+def getNumber(candidates, weights): # Decidir que número pegar
     total = sum(weights)
     value = random.uniform(0, total) # Sorteador um Decimal entre 0 e total(soma dos pesos)
     accumulated = 0
 
-    for i, weight in enumerate(weights):
+    for i, weight in enumerate(weights): # enumerate = indice + Valor
         accumulated += weight
-        if value < accumulated:
+        if value < accumulated: # Ver qual intervalo caiu no random.uniform
             return candidates[i]
 
+# Dados de Resolução:
 def checkQuadrants(board, size):
     correct = 0
     square = math.isqrt(size)
@@ -61,8 +62,8 @@ def checkQuadrants(board, size):
     for start_row in range(0, size, square):
         for start_col in range(0, size, square):
 
-            numbers = []
-
+            numbers = [] # Lista do Bloco
+            # ADD todos os números do Quadrante para a lsita
             for row in range(start_row, start_row + square):
                 for col in range(start_col, start_col + square):
                     numbers.append(board[row][col])
@@ -72,12 +73,12 @@ def checkQuadrants(board, size):
 
     return correct
 
-def solveAttempt(board, size):
+def solveAttempt(board, size): # 1 Tentativas
 
-    while not checkVictory(board):
+    while not checkVictory(board, size): 
 
         row, col, _ = findEmpty(board, size)
-        candidates = getCandidates(board, row, col)
+        candidates = getCandidates(board, row, col, size)
 
         if not candidates:
             return False
@@ -92,16 +93,17 @@ def solveAttempt(board, size):
 def solveSudoku_WithAttempt(board,limit_attempts,size):  
 
     attempts = 0
-    original = [row[:] for row in board]
+    original = [row[:] for row in board] # Copia do Tabuleiro
 
-    while not checkVictory(board):
+    while not checkVictory(board, size):
         attempts += 1
         # print(attempts)
+        # Restaura o tabuleiro
         for row in range(size):
             for col in range(size):
                 board[row][col] = original[row][col]
                 
-        result = solveAttempt(board)
+        result = solveAttempt(board, size)
 
         if result:
             print(f"Solução encontrada em {attempts} tentativas")
@@ -150,8 +152,8 @@ def solveSudoku_Backtraking(board, size):
     while candidates:
 
         number = getNumber(candidates, weights)
-        index = candidates.index(number)
-
+        index = candidates.index(number) # .index() é um método de listas do Python que procura um elemento e retorna a posição (índice)
+ 
         candidates.pop(index)
         weights.pop(index)
 
