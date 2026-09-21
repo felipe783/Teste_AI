@@ -1,38 +1,54 @@
 import math
 
+import math
+
+def _blockDims(size):
+    """Encontra (block_rows, block_cols) tal que block_rows * block_cols == size,
+    escolhendo a divisão mais próxima de um quadrado (funciona para 9, 16, 6, 12...)."""
+    best = (1, size)
+    for i in range(1, math.isqrt(size) + 1):
+        if size % i == 0:
+            best = (i, size // i)
+    return best  # ex: 9 -> (3,3) | 6 -> (2,3) | 12 -> (3,4) | 16 -> (4,4)
+
 def showBoard(board, original, size):
+    block_rows, block_cols = _blockDims(size)
+    digit_width = len(str(size))   # largura necessária pro maior número possível
+    cell_width = digit_width + 1   # número + 1 espaço
 
-    square = math.isqrt(size)
+    def buildRowPlain():
+        parts = []
+        for col in range(size):
+            parts.append(" " * cell_width)
+            if (col + 1) % block_cols == 0 and col != size - 1:
+                parts.append("│ ")
+        return "".join(parts)
 
-    # Largura de cada linha
-    cell_width = 2
+    content_width = len(buildRowPlain())
+    top = "┌" + "─" * (content_width + 1) + "┐"
+    mid = "├" + "─" * (content_width + 1) + "┤"
+    bot = "└" + "─" * (content_width + 1) + "┘"
 
-    # Borda superior
-    print("┌" + "─" * (size * cell_width + square - 1) + "┐")
+    print(top)
     for i, line in enumerate(board):
-
-        print("│", end=" ")
+        row = "│ "
         for j, num in enumerate(line):
-
+            text = str(num).rjust(digit_width) if num != 0 else ".".rjust(digit_width)
             if num == 0:
-                print("\033[90m.\033[0m", end=" ")
+                cell = f"\033[90m{text}\033[0m "
             elif original[i][j]:
-                # Número original
-                print(f"\033[92m{num}\033[0m", end=" ")
+                cell = f"\033[92m{text}\033[0m "
             else:
-                # Número colocado pelo algoritmo
-                print(f"\033[94m{num}\033[0m", end=" ")
-            # Separação entre blocos
-            if (j + 1) % square == 0 and j != size - 1:
-                print("│", end=" ")
+                cell = f"\033[94m{text}\033[0m "
+            row += cell
+            if (j + 1) % block_cols == 0 and j != size - 1:
+                row += "│ "
+        row += "│"
+        print(row)
 
-        print("│")
-        # Separação entre blocos
-        if (i + 1) % square == 0 and i != size - 1:
-            print("├" + "─" * (size * cell_width + square - 1) + "┤")
-    # Borda inferior
-    print("└" + "─" * (size * cell_width + square - 1) + "┘")
-
+        if (i + 1) % block_rows == 0 and i != size - 1:
+            print(mid)
+    print(bot)
 
 
 def checkVictory(board, size):  

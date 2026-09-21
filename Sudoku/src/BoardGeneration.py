@@ -58,12 +58,6 @@ def findEmpty(board, size):
     return bestCell[0], bestCell[1], bestCandidates
 
 def removerNumbers(board, amount, size):
-    """
-    positions = []
-        for row in range(9):
-            for col in range(9):
-                positions.append((row, col))
-    """
     positions = [
         (row, col)
         for row in range(size)
@@ -83,6 +77,7 @@ def removerNumbers(board, amount, size):
     return board
 
 def generateSolution(board,size):
+    # print("Gerando")
     empty = findEmpty(board, size)
     
     if empty is None:
@@ -114,7 +109,7 @@ def generateSudoku(removeCells, size):
 
     # Quantidade de números
     amount = removeCells
-
+    # print(f"size={size}, amount={amount}")
     # Remove números
     removerNumbers(board, amount, size)
 

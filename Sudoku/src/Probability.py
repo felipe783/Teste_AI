@@ -132,15 +132,19 @@ def solveSudoku_WithOutAttempt(board, size):
 
     return board, True
 
+calls = 0
 def solveSudoku_Backtraking(board, size):
+    global calls
+    calls += 1
+    if calls % 1000 == 0:
+        print(calls, "chamadas | vazias:", sum(row.count(0) for row in board))
 
     empty = findEmpty(board, size)
 
     if empty is None:
         return board, True
 
-    row, col = empty
-    candidates = getCandidates(board, row, col, size)
+    row, col, candidates = empty
     weights = getWeights(board, candidates, size)
 
     while candidates:
@@ -153,7 +157,7 @@ def solveSudoku_Backtraking(board, size):
 
         board[row][col] = number
 
-        if solveSudoku_Backtraking(board):
+        if solveSudoku_Backtraking(board, size):
             return board, True
 
         board[row][col] = 0

@@ -13,32 +13,51 @@ from src.Logs import *
 class Cor:
     RESET = "\033[0m"
     BOLD = "\033[1m"
+    DIM = "\033[2m"
     CIANO = "\033[96m"
     VERDE = "\033[92m"
     VERMELHO = "\033[91m"
     AMARELO = "\033[93m"
     AZUL = "\033[94m"
+    MAGENTA = "\033[95m"
+    BRANCO = "\033[97m"
     CINZA = "\033[90m"
 
 LARGURA = 50
 SIZE = 33   
-def linha(char="-", cor=Cor.CINZA):
+
+# ---------- Helpers de estilo ----------
+def linha(char="─", cor=Cor.CINZA):
     print(f"{cor}{char * LARGURA}{Cor.RESET}")
 
 def titulo(texto, cor=Cor.CIANO):
-    linha("=", cor)
-    print(f"{cor}{Cor.BOLD}{texto.center(LARGURA)}{Cor.RESET}")
-    linha("=", cor)
+    interno = LARGURA - 2
+    print(f"{cor}╔{'═' * interno}╗{Cor.RESET}")
+    print(f"{cor}║{Cor.BOLD}{texto.center(interno)}{Cor.RESET}{cor}║{Cor.RESET}")
+    print(f"{cor}╚{'═' * interno}╝{Cor.RESET}")
 
 def secao(texto, cor=Cor.AZUL):
-    print(f"\n{cor}{Cor.BOLD}{texto}{Cor.RESET}")
-    linha("-", cor)
+    print(f"\n{cor}{Cor.BOLD}▌ {texto}{Cor.RESET}")
+    linha("─", cor)
 
 def menu(opcoes: dict, titulo_menu: str):
     secao(titulo_menu)
     for chave, valor in opcoes.items():
-        print(f"  {Cor.AMARELO}{chave}{Cor.RESET} - {valor}")
-    linha("-")
+        print(f"  {Cor.AMARELO}{Cor.BOLD}[{chave}]{Cor.RESET} {Cor.BRANCO}{valor}{Cor.RESET}")
+    linha("─")
+
+def prompt(texto, cor=Cor.BOLD):
+    return f"{Cor.CIANO}{Cor.BOLD}❯{Cor.RESET} {cor}{texto}{Cor.RESET}"
+
+def aviso(texto):
+    print(f"{Cor.AMARELO}{Cor.BOLD}⚠{Cor.RESET} {Cor.AMARELO}{texto}{Cor.RESET}")
+
+def erro(texto):
+    print(f"{Cor.VERMELHO}{Cor.BOLD}✘ {texto}{Cor.RESET}")
+
+def campo(rotulo, valor):
+    pontilhado = (rotulo + " ").ljust(22, "·")
+    print(f"  {Cor.CINZA}{pontilhado}{Cor.RESET} {valor}")
 
 
 # MAIN FLOW
@@ -50,31 +69,31 @@ menu(
     "TIPO DE JOGO"
 )
 
-gameType = int(input(f"{Cor.BOLD}Escolha o modo: {Cor.RESET}"))
+gameType = int(input(prompt("Escolha o modo: ")))
 
 if gameType == 2:
     challenge = True
 else:
-    print("=== CONFIGURAÇÃO DO SUDOKU ===")
-    print(" Ex: 9 --> 9x9, 81 -->81x81")
-    SIZE = int(input("Digite o tamanho do Sudoku (9 para 9x9, 81 para 81x81): "))
+    secao("CONFIGURAÇÃO DO SUDOKU", Cor.MAGENTA)
+    print(f"  {Cor.DIM}Ex: 9 --> 9x9, 81 --> 81x81{Cor.RESET}")
+    SIZE = int(input(prompt("Digite o tamanho do Sudoku (9 para 9x9, 81 para 81x81): ")))
     if SIZE < 0:
-        print("O Número deve ser maior que 0")
+        erro("O Número deve ser maior que 0")
         exit(0)
         
     square = math.isqrt(SIZE)
 
     if not(square**2 == SIZE):
-        print("O Número deve ser um Quadrado Perfeito")
+        erro("O Número deve ser um Quadrado Perfeito")
         exit(0)
 
         
 
-numBoards = int(input(f"\n{Cor.BOLD}Número de jogos que deseja: {Cor.RESET}"))
+numBoards = int(input("\n" + prompt("Número de jogos que deseja: ")))
 
 
 menu({"1": "Fácil", "2": "Médio", "3": "Difícil"}, "DIFICULDADE")
-difficulty = int(input(f"{Cor.BOLD}Escolha a dificuldade: {Cor.RESET}"))
+difficulty = int(input(prompt("Escolha a dificuldade: ")))
 
 totalRevealedCells = setupGame(difficulty, SIZE) # Total de Celulas a Revelar
 # print(difficulty, size)
@@ -86,16 +105,17 @@ if gameType == 1:
         "2": "Probabilidade com N Tentativas",
         "3": "BackTraking",
     }, "MÉTODO DE RESOLUÇÃO")
-    resolve = int(input(f"{Cor.BOLD}Escolha o método: {Cor.RESET}"))
+    resolve = int(input(prompt("Escolha o método: ")))
 else:
-    print(f"\n{Cor.AMARELO}{Cor.BOLD}[!] O Sudoku Samurai requer regras de Backtracking estrutural.{Cor.RESET}")
-    print(f"{Cor.AMARELO}[!] Método de Resolução definido automaticamente para: Usando o Backtracking.{Cor.RESET}")
+    print()
+    aviso("O Sudoku Samurai requer regras de Backtracking estrutural.")
+    aviso("Método de Resolução definido automaticamente para: Usando o Backtracking.")
     resolve = 3
 
 limit_attempts = "Apenas 1 tentativa"
 if resolve == 2 and gameType == 1:
-    secao("LIMITE DE TENTATIVAS")
-    limit_attempts = int(input(f"{Cor.AMARELO}Fale o limite de tentativas: {Cor.RESET}"))
+    secao("LIMITE DE TENTATIVAS", Cor.MAGENTA)
+    limit_attempts = int(input(prompt("Fale o limite de tentativas: ", Cor.AMARELO)))
     
 inicio = time.time()
 
@@ -109,12 +129,13 @@ totalAttempts = numBoards
 try:
     for i in range(numBoards):
 
+        print()
         titulo(f"JOGO {i + 1} / {numBoards}", Cor.AZUL)
         gamesPlayed += 1
 
         if gameType == 1:
             # Fluxo Tradicional 9x9
-            board = generateSudoku(difficulty, SIZE)
+            board = generateSudoku(totalRevealedCells, SIZE)
             original = [[num != 0 for num in row] for row in board]
             
             secao("Board Inicial")
@@ -130,7 +151,7 @@ try:
             elif resolve == 4:
                 pass # Substitua pela sua chamada CSP real
                 
-            secao("Board Final")
+            secao("Board Final", Cor.VERDE)
             showBoard(board, original, SIZE)
 
             correctQuadrants = checkQuadrants(board,SIZE)
@@ -149,7 +170,7 @@ try:
 
             result = solveSamurai_Backtracking(board)
 
-            secao("Board Final (Samurai)")
+            secao("Board Final (Samurai)", Cor.VERDE)
             showBoardSamurai(board, original)
 
             # Cálculo de Cobertura para o Samurai
@@ -174,30 +195,31 @@ try:
             impossible += 1
             status = f"{Cor.VERMELHO}{Cor.BOLD}✘ IMPOSSÍVEL{Cor.RESET}"
 
-        secao("Resultado")
-        print(f"  Status:              {status}")
+        secao("Resultado", Cor.MAGENTA)
+        campo("Status", status)
         if gameType == 1:
-            print(f"  Quadrantes corretos: {Cor.AMARELO}{correctQuadrants}/9{Cor.RESET}")
-        print(f"  Cobertura:           {Cor.AMARELO}{coverage:.2f}%{Cor.RESET}")
+            campo("Quadrantes corretos", f"{Cor.AMARELO}{Cor.BOLD}{correctQuadrants}/9{Cor.RESET}")
+        campo("Cobertura", f"{Cor.AMARELO}{Cor.BOLD}{coverage:.2f}%{Cor.RESET}")
         print()
 
 finally:
     fim = time.time()
     execution_time = fim - inicio
 
+    print()
     titulo("RESUMO FINAL", Cor.VERDE)
-    print(f"  Jogos disputados:     {gamesPlayed}")
-    print(f"  Resolvidos:           {Cor.VERDE}{solved}{Cor.RESET}")
-    print(f"  Impossíveis:          {Cor.VERMELHO}{impossible}{Cor.RESET}")
+    campo("Jogos disputados", f"{Cor.BRANCO}{Cor.BOLD}{gamesPlayed}{Cor.RESET}")
+    campo("Resolvidos", f"{Cor.VERDE}{Cor.BOLD}{solved}{Cor.RESET}")
+    campo("Impossíveis", f"{Cor.VERMELHO}{Cor.BOLD}{impossible}{Cor.RESET}")
     
     if gameType == 1:
-        print(f"  Tentativas:           {Cor.VERMELHO}{totalAttempts}{Cor.RESET}")
+        campo("Tentativas", f"{Cor.VERMELHO}{Cor.BOLD}{totalAttempts}{Cor.RESET}")
         
     if gamesPlayed:
-        print(f"  Cobertura média:      {Cor.AMARELO}{totalCoverage / gamesPlayed:.2f}%{Cor.RESET}")
+        campo("Cobertura média", f"{Cor.AMARELO}{Cor.BOLD}{totalCoverage / gamesPlayed:.2f}%{Cor.RESET}")
         
-    print(f"  Tempo total:          {execution_time:.2f}s")
-    linha("=", Cor.VERDE)
+    campo("Tempo total", f"{Cor.CIANO}{Cor.BOLD}{execution_time:.2f}s{Cor.RESET}")
+    linha("═", Cor.VERDE)
 
     saveResults(
         difficulty,
