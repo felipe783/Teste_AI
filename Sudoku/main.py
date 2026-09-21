@@ -3,6 +3,7 @@ import core.config as core
 
 from src.SamuraiGame.BoardSamuraiGeneration import *
 from src.SamuraiGame.SamuraiBoard import *
+from src.gameConfig import *
 from src.Board import *
 from src.BoardGeneration import *
 from src.Probability import *
@@ -20,7 +21,7 @@ class Cor:
     CINZA = "\033[90m"
 
 LARGURA = 50
-
+SIZE = 33   
 def linha(char="-", cor=Cor.CINZA):
     print(f"{cor}{char * LARGURA}{Cor.RESET}")
 
@@ -53,10 +54,18 @@ gameType = int(input(f"{Cor.BOLD}Escolha o modo: {Cor.RESET}"))
 
 if gameType == 2:
     challenge = True
+else:
+    print("=== CONFIGURAÇÃO DO SUDOKU ===")
+    SIZE = input("Digite o tamanho do Sudoku (9 para 9x9, 81 para 81x81): ")
+
 numBoards = int(input(f"\n{Cor.BOLD}Número de jogos que deseja: {Cor.RESET}"))
+
 
 menu({"1": "Fácil", "2": "Médio", "3": "Difícil"}, "DIFICULDADE")
 difficulty = int(input(f"{Cor.BOLD}Escolha a dificuldade: {Cor.RESET}"))
+
+totalRevealedCells = setupGame(difficulty, SIZE) # Total de Celulas a Revelar
+# print(difficulty, size)
 
 # O Samurai tem uma matriz complexa que inviabiliza as lógicas de "probabilidade" pura feitas para o 9x9.
 if gameType == 1:
@@ -71,20 +80,11 @@ else:
     print(f"{Cor.AMARELO}[!] Método de Resolução definido automaticamente para: Usando o Backtracking.{Cor.RESET}")
     resolve = 3
 
-limit_attempts = "Nao tem limite de Tentativas"
+limit_attempts = "Apenas 1 tentativa"
 if resolve == 2 and gameType == 1:
     secao("LIMITE DE TENTATIVAS")
     limit_attempts = int(input(f"{Cor.AMARELO}Fale o limite de tentativas: {Cor.RESET}"))
     
-challenge = 0
-if resolve == 4 and gameType == 1:
-    menu({"1": "SIM", "2": "NAO"}, "DESEJA O DESAFIO?")
-    challenge = int(input(f"{Cor.AMARELO}Fale: {Cor.RESET}"))
-    if challenge == 1:
-        secao(" DESAFIO ")
-    else:
-        challenge = 0
-
 inicio = time.time()
 
 solved = 0
@@ -128,7 +128,7 @@ try:
 
         else:
             # Fluxo Samurai 33x33
-            board = generateSamurai(difficulty)
+            board = generateSamurai(totalRevealedCells)
             # Para renderização: mapeia células válidas e que não estão vazias como Originais
             original = [[(num != 0 and num is not None) for num in row] for row in board]
             
@@ -198,6 +198,6 @@ finally:
         limit_attempts,
         totalAttempts,
         execution_time,
-        
+        SIZE,
         gameType
     )

@@ -95,15 +95,11 @@ def removeNumbersSamurai(board, amount):
         currentNumbers -= 1
     return board
 
-def generateSamurai(difficulty):
+def generateSamurai(removeCells):
     print(f"\n{Cor.CINZA}Gerando tabuleiro Samurai (pode levar alguns segundos)...{Cor.RESET}")
     grid = createGridSamurai()
-    
+    amount = removeCells
     # Mapeando dificuldade para a quantidade de números que sobram (exemplo)
-    if difficulty == 1: amount = 500
-    elif difficulty == 2: amount = 400
-    else: amount = 190
-
     if solveSamurai_Backtracking(grid):
         puzzleGrid = removeNumbersSamurai(grid, amount)
         return puzzleGrid
