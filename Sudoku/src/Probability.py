@@ -132,12 +132,12 @@ def solveSudoku_WithOutAttempt(board, size):
 
     return board, True
 
-calls = 0
+# calls = 0
 def solveSudoku_Backtraking(board, size):
-    global calls
+    """global calls
     calls += 1
     if calls % 1000 == 0:
-        print(calls, "chamadas | vazias:", sum(row.count(0) for row in board))
+        print(calls, "chamadas | vazias:", sum(row.count(0) for row in board))"""
 
     empty = findEmpty(board, size)
 
@@ -163,3 +163,5 @@ def solveSudoku_Backtraking(board, size):
         board[row][col] = 0
 
     return False
+
+

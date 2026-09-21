@@ -1,6 +1,5 @@
 import math
-
-import math
+import random
 
 def _blockDims(size):
     """Encontra (block_rows, block_cols) tal que block_rows * block_cols == size,

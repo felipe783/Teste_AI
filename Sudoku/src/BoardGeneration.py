@@ -76,6 +76,23 @@ def removerNumbers(board, amount, size):
         currentNumbers -= 1
     return board
 
+def generateSudoku(removeCells, size):
+
+    board = [
+        [0 for _ in range(size)] 
+        for _ in range(size)
+    ]
+    # Gera solução completa
+    generateSolution(board, size)
+
+    # Quantidade de números
+    amount = removeCells
+    # print(f"size={size}, amount={amount}")
+    # Remove números
+    removerNumbers(board, amount, size)
+
+    return board
+
 def generateSolution(board,size):
     # print("Gerando")
     empty = findEmpty(board, size)
@@ -98,19 +115,57 @@ def generateSolution(board,size):
 
     return False
 
-def generateSudoku(removeCells, size):
+"""def _blockDims(size):
+    best = (1, size)
+    for i in range(1, math.isqrt(size) + 1):
+        if size % i == 0:
+            best = (i, size // i)
+    return best  # ex: 9 -> (3,3) | 81 -> (9,9) | 6 -> (2,3)
 
-    board = [
-        [0 for _ in range(size)] 
-        for _ in range(size)
-    ]
-    # Gera solução completa
-    generateSolution(board, size)
 
-    # Quantidade de números
-    amount = removeCells
-    # print(f"size={size}, amount={amount}")
-    # Remove números
-    removerNumbers(board, amount, size)
+def generateSolution(board, size):
+    R, C = _blockDims(size)
 
-    return board
+    def pattern(r, c):
+        return (C * (r % R) + r // R + c) % size
+
+    def shuffled(seq):
+        seq = list(seq)
+        random.shuffle(seq)
+        return seq
+
+    rows = [g * R + r for g in shuffled(range(C)) for r in shuffled(range(R))]
+    cols = [g * C + c for g in shuffled(range(R)) for c in shuffled(range(C))]
+    nums = shuffled(range(1, size + 1))
+
+    for i, r in enumerate(rows):
+        for j, c in enumerate(cols):
+            board[i][j] = nums[pattern(r, c)]
+
+    return True
+
+def isValidSolution(board, size):
+    R, C = _blockDims(size)
+    expected = set(range(1, size + 1))
+
+    for row in board:
+        if set(row) != expected:
+            return False
+
+    for c in range(size):
+        col = [board[r][c] for r in range(size)]
+        if set(col) != expected:
+            return False
+
+    for br in range(0, size, R):
+        for bc in range(0, size, C):
+            block = [
+                board[r][c]
+                for r in range(br, br + R)
+                for c in range(bc, bc + C)
+            ]
+            if set(block) != expected:
+                return False
+
+    return True
+"""
