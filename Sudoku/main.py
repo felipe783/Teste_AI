@@ -48,15 +48,18 @@ menu(
     {"1": "Sudoku Tradicional (9x9)", "2": "Sudoku Samurai (33x33)"},
     "TIPO DE JOGO"
 )
-tipo_jogo = int(input(f"{Cor.BOLD}Escolha o modo: {Cor.RESET}"))
 
+gameType = int(input(f"{Cor.BOLD}Escolha o modo: {Cor.RESET}"))
+
+if gameType == 2:
+    challenge = True
 numBoards = int(input(f"\n{Cor.BOLD}Número de jogos que deseja: {Cor.RESET}"))
 
 menu({"1": "Fácil", "2": "Médio", "3": "Difícil"}, "DIFICULDADE")
 difficulty = int(input(f"{Cor.BOLD}Escolha a dificuldade: {Cor.RESET}"))
 
 # O Samurai tem uma matriz complexa que inviabiliza as lógicas de "probabilidade" pura feitas para o 9x9.
-if tipo_jogo == 1:
+if gameType == 1:
     menu({
         "1": "Probabilidade com 1 Tentativa",
         "2": "Probabilidade com N Tentativas",
@@ -69,12 +72,12 @@ else:
     resolve = 3
 
 limit_attempts = "Nao tem limite de Tentativas"
-if resolve == 2 and tipo_jogo == 1:
+if resolve == 2 and gameType == 1:
     secao("LIMITE DE TENTATIVAS")
     limit_attempts = int(input(f"{Cor.AMARELO}Fale o limite de tentativas: {Cor.RESET}"))
     
 challenge = 0
-if resolve == 4 and tipo_jogo == 1:
+if resolve == 4 and gameType == 1:
     menu({"1": "SIM", "2": "NAO"}, "DESEJA O DESAFIO?")
     challenge = int(input(f"{Cor.AMARELO}Fale: {Cor.RESET}"))
     if challenge == 1:
@@ -97,7 +100,7 @@ try:
         titulo(f"JOGO {i + 1} / {numBoards}", Cor.AZUL)
         gamesPlayed += 1
 
-        if tipo_jogo == 1:
+        if gameType == 1:
             # Fluxo Tradicional 9x9
             board = generateSudoku(difficulty)
             original = [[num != 0 for num in row] for row in board]
@@ -161,7 +164,7 @@ try:
 
         secao("Resultado")
         print(f"  Status:              {status}")
-        if tipo_jogo == 1:
+        if gameType == 1:
             print(f"  Quadrantes corretos: {Cor.AMARELO}{correctQuadrants}/9{Cor.RESET}")
         print(f"  Cobertura:           {Cor.AMARELO}{coverage:.2f}%{Cor.RESET}")
         print()
@@ -175,7 +178,7 @@ finally:
     print(f"  Resolvidos:           {Cor.VERDE}{solved}{Cor.RESET}")
     print(f"  Impossíveis:          {Cor.VERMELHO}{impossible}{Cor.RESET}")
     
-    if tipo_jogo == 1:
+    if gameType == 1:
         print(f"  Tentativas:           {Cor.VERMELHO}{totalAttempts}{Cor.RESET}")
         
     if gamesPlayed:
@@ -194,5 +197,7 @@ finally:
         totalCoverage,
         limit_attempts,
         totalAttempts,
-        execution_time
+        execution_time,
+        
+        gameType
     )

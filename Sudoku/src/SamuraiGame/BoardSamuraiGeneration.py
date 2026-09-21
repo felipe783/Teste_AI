@@ -79,6 +79,7 @@ def solveSamurai_Backtracking(board):
 
 def removeNumbersSamurai(board, amount):
     positions = []
+
     for row in range(len(board)):
         for col in range(len(board[0])):
             if board[row][col] != 0 and board[row][col] is not None:
@@ -99,9 +100,9 @@ def generateSamurai(difficulty):
     grid = createGridSamurai()
     
     # Mapeando dificuldade para a quantidade de números que sobram (exemplo)
-    if difficulty == 1: amount = 300
-    elif difficulty == 2: amount = 200
-    else: amount = getattr(core, 'SAMURAI_NUMBERS_HARD', 120)
+    if difficulty == 1: amount = 500
+    elif difficulty == 2: amount = 400
+    else: amount = 190
 
     if solveSamurai_Backtracking(grid):
         puzzleGrid = removeNumbersSamurai(grid, amount)

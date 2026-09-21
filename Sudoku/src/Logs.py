@@ -11,7 +11,9 @@ def saveResults(
     total_coverage,
     limit_attempts,
     total_attempts,
-    execution_time
+    execution_time,
+    size,
+    challenge
 ):
 
     difficulty_names = {
@@ -25,6 +27,8 @@ def saveResults(
         3: "BackTraking" 
     }
 
+    challenge = False
+    size = 9
     type = resolve_name[resolve]
     name = difficulty_names[difficulty]
 
@@ -38,7 +42,9 @@ def saveResults(
     "media_cobertura": round(total_coverage / numBoards,2),
     "total_tentativas": total_attempts,
     "limite_tentativas_por_game": limit_attempts,
-    "tempo_total": round(execution_time/60, 2)
+    "tempo_total": round(execution_time/60, 2),
+    "desafio": challenge,
+    "size": size
     }
 
     file_path = "results.json"
