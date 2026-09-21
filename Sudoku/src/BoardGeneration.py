@@ -1,53 +1,79 @@
 import random 
-import core.config as core
+import math
 
-def isValid(board, row, col, num): # Ele não verifica o Sudoku por completo, ele so verifica se um número pode ser colocado ali
+def isValid(board, row, col, num, size): # Ele não verifica o Sudoku por completo, ele so verifica se um número pode ser colocado ali
     # isValid(board, 4, 5, 7) Posso colocar o número 7 na linha 4, coluna 5?
 
+    square = math.isqrt(size)
     # Linha 
-    for c in range(core.SIZE):
+    for c in range(size):
         if board[row][c] == num: 
             return False
     # Coluna
-    for r in range(core.SIZE):
+    for r in range(size):
         if board[r][col] == num:
             return False
 
     # Bloco 3x3
-    startRow = (row // 3) * 3 # Row = 7 --> 7//3 = 2 --> 3 * 2 = 6, A linha vai começar na posição 6
-    startCol = (col // 3) * 3 # A Coluna tbm vai começar na posição 6
+    # Ex: square = 3
+    startRow = (row // square) * square # Row = 7 --> 7//3 = 2 --> 3 * 2 = 6, A linha vai começar na posição 6
+    startCol = (col // square) * square # A Coluna tbm vai começar na posição 6
 
-    for r in range(startRow, startRow + 3): # (6 , 9)
-        for c in range(startCol, startCol + 3):
+    for r in range(startRow, startRow + square): # (6 , 9)
+        for c in range(startCol, startCol + square):
             if board[r][c] == num:
                 return False
     return True
 
-def findEmpty(board):
-    for row in range(core.SIZE):
-        for col in range(core.SIZE):
+def findEmpty(board, size):
+    minOptions = size + 1
+    bestCell = None
+    bestCandidates = []
+
+    for row in range(size):
+        for col in range(size):
             if board[row][col] == 0:
-                return row, col
 
-    return None
+                candidates = [
+                    num
+                    for num in range(1, size + 1)
+                    if isValid(board, row, col, num, size)
+                ]
 
-def removerNumbers(board, amount):
+                # Nenhuma possibilidade para essa célula
+                if not candidates:
+                    return row, col, []
+                if len(candidates) < minOptions:
+                    minOptions = len(candidates)
+                    bestCell = (row, col)
+                    bestCandidates = candidates
+                    # Não existe célula melhor que uma com 1 candidato
+                    if minOptions == 1:
+                        return row, col, candidates
+
+    # Não existem células vazias
+    if bestCell is None:
+        return None
+
+    return bestCell[0], bestCell[1], bestCandidates
+
+def removerNumbers(board, amount, size):
     """
     positions = []
         for row in range(9):
             for col in range(9):
                 positions.append((row, col))
     """
-    positions = [ # Pega cada posição e add na Lista (0,0), (0,1)...
-        (row, col)   # A cada rodada do for isso add o valor
-        for row in range(core.SIZE) 
-        for col in range(core.SIZE)
+    positions = [
+        (row, col)
+        for row in range(size)
+        for col in range(size)
+        if board[row][col] != 0 and board[row][col] is not None
     ]
 
-    # print(positions)
+    random.shuffle(positions)
 
-    random.shuffle(positions) # Embaralhar as posições para ter diferentes posicações retirada pra cada Sudoku
-    currentNumbers = 81
+    currentNumbers = len(positions)
 
     for row, col in positions: # Pega um posição aleatoria
         if currentNumbers <= amount: # Quando tiver menos que o ideal ele para
@@ -56,53 +82,40 @@ def removerNumbers(board, amount):
         currentNumbers -= 1
     return board
 
-def generateSolution(board):
-    empty = findEmpty(board)
-
+def generateSolution(board,size):
+    empty = findEmpty(board, size)
+    
     if empty is None:
         return True
 
-    row, col = empty # Onde precisa colocar no Número
-    numbers = list(range(1, 10)) 
-    random.shuffle(numbers) # Garante que o Sudoku seja diferente um do outro
+    row, col, candidates = empty 
+    if not candidates:
+        return False
 
-    for num in numbers:
-        if isValid(board, row, col, num):  # Tentativa e ERRO se ela não achar a Sequencia certa ela volta pro começo
-            board[row][col] = num
-            if generateSolution(board):
-                return True
+    random.shuffle(candidates)
 
-            board[row][col] = 0
+    for num in candidates:
+        board[row][col] = num
+
+        if generateSolution(board, size):
+            return True
+        board[row][col] = 0
 
     return False
 
-def generateSudoku(difficulty):
-    """
-    board = []
-    for _ in range(9):
-        row = []
-        for _ in range(9):
-            row.append(0)
-        board.append(row)
-    """
+def generateSudoku(removeCells, size):
+
     board = [
-        [0 for _ in range(9)] 
-        for _ in range(9)
+        [0 for _ in range(size)] 
+        for _ in range(size)
     ]
     # Gera solução completa
-    generateSolution(board)
+    generateSolution(board, size)
 
     # Quantidade de números
-    if difficulty == 1:
-        amount = core.NUMBERS_EASY
-    elif difficulty == 2:
-        amount = core.NUMBERS_MEDIUM
-    elif difficulty == 3:
-        amount = core.NUMBERS_HARD
-    else:
-        raise ValueError("Dificuldade inválida")
+    amount = removeCells
 
     # Remove números
-    removerNumbers(board, amount)
+    removerNumbers(board, amount, size)
 
     return board

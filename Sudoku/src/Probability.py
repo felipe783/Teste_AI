@@ -2,34 +2,32 @@ from src.BoardGeneration import *
 from src.Board import *
 import random
 
-def getCandidates(board, row , col):
+def getCandidates(board, row , col, size):
     # candidates = [num for num in range(1,10) if isValid(board, row, col, num)]
     candidates = []
-    for num in range(1, 10):
-        if isValid(board, row, col, num):
+    for num in range(1, size + 1):
+        if isValid(board, row, col, num, size):
             candidates.append(num)
 
     return candidates
 
-def checkNumberDuplicates(board, candidates): # Ver quantas vezes o Número se repete  
+def checkNumberDuplicates(board, candidates,size): # Ver quantas vezes o Número se repete  
     times = []
 
     for candidate in candidates:
         count = 0  
 
-        for row in range(9):
-            for col in range(9):
-
+        for row in range(size):
+            for col in range(size):
                 if board[row][col] == 0:
-                    if isValid(board, row, col, candidate):
+                    if isValid(board, row, col, candidate, size):
                         count += 1
-
         times.append(count)
 
     return times
 
-def getWeights(board, candidates):
-    duplicates = checkNumberDuplicates(board, candidates)
+def getWeights(board, candidates, size):
+    duplicates = checkNumberDuplicates(board, candidates, size)
     weights = []
 
     for duplicate in duplicates:
@@ -56,41 +54,42 @@ def getNumber(candidates, weights):
         if value < accumulated:
             return candidates[i]
 
-def checkQuadrants(board):
+def checkQuadrants(board, size):
     correct = 0
+    square = math.isqrt(size)
 
-    for start_row in range(0, 9, 3):
-        for start_col in range(0, 9, 3):
+    for start_row in range(0, size, square):
+        for start_col in range(0, size, square):
 
             numbers = []
 
-            for row in range(start_row, start_row + 3):
-                for col in range(start_col, start_col + 3):
+            for row in range(start_row, start_row + square):
+                for col in range(start_col, start_col + square):
                     numbers.append(board[row][col])
 
-            if sorted(numbers) == list(range(1, 10)):
+            if sorted(numbers) == list(range(1, size + 1)):
                 correct += 1
 
     return correct
 
-def solveAttempt(board):
+def solveAttempt(board, size):
 
     while not checkVictory(board):
 
-        row, col = findEmpty(board)
+        row, col, _ = findEmpty(board, size)
         candidates = getCandidates(board, row, col)
 
         if not candidates:
             return False
 
-        weights = getWeights(board, candidates)
+        weights = getWeights(board, candidates, size)
         # number = random.choices(candidates,weights=weights,k=1)[0] # Esta linha sortea um elemento usando os Pesos, e pega o elemento da posição 0, o K é quantos numeros queremos retornar(no caso 1)
         number = getNumber(candidates, weights)
         board[row][col] = number
 
     return True
 
-def solveSudoku_WithAttempt(board,limit_attempts):  
+def solveSudoku_WithAttempt(board,limit_attempts,size):  
 
     attempts = 0
     original = [row[:] for row in board]
@@ -98,8 +97,8 @@ def solveSudoku_WithAttempt(board,limit_attempts):
     while not checkVictory(board):
         attempts += 1
         # print(attempts)
-        for row in range(9):
-            for col in range(9):
+        for row in range(size):
+            for col in range(size):
                 board[row][col] = original[row][col]
                 
         result = solveAttempt(board)
@@ -113,32 +112,36 @@ def solveSudoku_WithAttempt(board,limit_attempts):
 
     return board, attempts, False
 
-def solveSudoku_WithOutAttempt(board):  
+def solveSudoku_WithOutAttempt(board, size):  
 
-    while not checkVictory(board):
-        row, col = findEmpty(board)
-        candidates = getCandidates(board, row, col)
+    while not checkVictory(board, size):
+        result = findEmpty(board, size)
+
+        if result is None:
+            return board, checkVictory(board, size)
+        
+        row, col, candidates = result
 
         if not candidates:
             return board, False
 
-        weights = getWeights(board, candidates)
+        weights = getWeights(board, candidates, size)
         # number = random.choices(candidates,weights=weights,k=1)[0] # Esta linha sortea um elemento usando os Pesos, e pega o elemento da posição 0, o K é quantos numeros queremos retornar(no caso 1)
         number = getNumber(candidates, weights)
         board[row][col] = number
 
     return board, True
 
-def solveSudoku_Backtraking(board):
+def solveSudoku_Backtraking(board, size):
 
-    empty = findEmpty(board)
+    empty = findEmpty(board, size)
 
     if empty is None:
         return board, True
 
     row, col = empty
-    candidates = getCandidates(board, row, col)
-    weights = getWeights(board, candidates)
+    candidates = getCandidates(board, row, col, size)
+    weights = getWeights(board, candidates, size)
 
     while candidates:
 

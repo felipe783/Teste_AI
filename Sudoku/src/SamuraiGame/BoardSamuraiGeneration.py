@@ -98,6 +98,7 @@ def removeNumbersSamurai(board, amount):
 def generateSamurai(removeCells):
     print(f"\n{Cor.CINZA}Gerando tabuleiro Samurai (pode levar alguns segundos)...{Cor.RESET}")
     grid = createGridSamurai()
+    
     amount = removeCells
     # Mapeando dificuldade para a quantidade de números que sobram (exemplo)
     if solveSamurai_Backtracking(grid):

@@ -1,5 +1,5 @@
 import time
-import core.config as core
+import math
 
 from src.SamuraiGame.BoardSamuraiGeneration import *
 from src.SamuraiGame.SamuraiBoard import *
@@ -46,7 +46,7 @@ def menu(opcoes: dict, titulo_menu: str):
 titulo("SUDOKU SOLVER")
 
 menu(
-    {"1": "Sudoku Tradicional (9x9)", "2": "Sudoku Samurai (33x33)"},
+    {"1": "Sudoku Tradicional", "2": "Sudoku Samurai (33x33)"},
     "TIPO DE JOGO"
 )
 
@@ -56,7 +56,19 @@ if gameType == 2:
     challenge = True
 else:
     print("=== CONFIGURAÇÃO DO SUDOKU ===")
-    SIZE = input("Digite o tamanho do Sudoku (9 para 9x9, 81 para 81x81): ")
+    print(" Ex: 9 --> 9x9, 81 -->81x81")
+    SIZE = int(input("Digite o tamanho do Sudoku (9 para 9x9, 81 para 81x81): "))
+    if SIZE < 0:
+        print("O Número deve ser maior que 0")
+        exit(0)
+        
+    square = math.isqrt(SIZE)
+
+    if not(square**2 == SIZE):
+        print("O Número deve ser um Quadrado Perfeito")
+        exit(0)
+
+        
 
 numBoards = int(input(f"\n{Cor.BOLD}Número de jogos que deseja: {Cor.RESET}"))
 
@@ -102,26 +114,26 @@ try:
 
         if gameType == 1:
             # Fluxo Tradicional 9x9
-            board = generateSudoku(difficulty)
+            board = generateSudoku(difficulty, SIZE)
             original = [[num != 0 for num in row] for row in board]
             
             secao("Board Inicial")
-            showBoard(board, original)
+            showBoard(board, original, SIZE)
 
             if resolve == 1:
-                result = solveSudoku_WithOutAttempt(board)
+                result = solveSudoku_WithOutAttempt(board, SIZE)
             elif resolve == 2:
-                result, attempts = solveSudoku_WithAttempt(board, limit_attempts)
+                result, attempts = solveSudoku_WithAttempt(board, limit_attempts, SIZE)
                 totalAttempts += attempts
             elif resolve == 3:
-                result = solveSudoku_Backtraking(board)
+                result = solveSudoku_Backtraking(board, SIZE)
             elif resolve == 4:
                 pass # Substitua pela sua chamada CSP real
                 
             secao("Board Final")
-            showBoard(board, original)
+            showBoard(board, original, SIZE)
 
-            correctQuadrants = checkQuadrants(board)
+            correctQuadrants = checkQuadrants(board,SIZE)
             coverage = (correctQuadrants / 9) * 100
             totalQuadrants += correctQuadrants
             totalCoverage += coverage
@@ -143,8 +155,8 @@ try:
             # Cálculo de Cobertura para o Samurai
             celulas_preenchidas = 0
             celulas_totais = 0
-            for r in range(core.GRID_SIZE):
-                for c in range(core.GRID_SIZE):
+            for r in range(SIZE):
+                for c in range(SIZE):
                     if board[r][c] is not None:
                         celulas_totais += 1
                         if board[r][c] != 0:
