@@ -147,17 +147,17 @@ def solveSudoku_Backtraking(board, size):
         return board, True
 
     row, col, candidates = empty
-    weights = getWeights(board, candidates, size)
+    # weights = getWeights(board, candidates, size)
 
     while candidates:
 
-        number = getNumber(candidates, weights)
-        index = candidates.index(number) # .index() é um método de listas do Python que procura um elemento e retorna a posição (índice)
- 
-        candidates.pop(index)
-        weights.pop(index)
-
+        number = candidates.pop(0)
         board[row][col] = number
+
+        # number = getNumber(candidates, weights)
+        # index = candidates.index(number) # .index() é um método de listas do Python que procura um elemento e retorna a posição (índice)
+        # candidates.pop(index)
+        # weights.pop(index)
 
         if solveSudoku_Backtraking(board, size):
             return board, True

@@ -87,7 +87,6 @@ else:
         erro("O Número deve ser um Quadrado Perfeito")
         exit(0)
 
-        
 
 numBoards = int(input("\n" + prompt("Número de jogos que deseja: ")))
 
