@@ -1,6 +1,8 @@
 from src.BoardGeneration import *
 from src.Board import *
 import random
+import sys
+sys.setrecursionlimit(10000)
 
 def getCandidates(board, row , col, size):
     # candidates = [num for num in range(1,10) if isValid(board, row, col, num)]
@@ -151,7 +153,7 @@ def solveSudoku_Backtraking(board, size):
 
     while candidates:
 
-        number = candidates.pop(0)
+        number = candidates.pop()
         board[row][col] = number
 
         # number = getNumber(candidates, weights)
