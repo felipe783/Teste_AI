@@ -47,4 +47,4 @@ git sparse-checkout set Sudoku
 
 ## 📚 Documentação
 
-A documentação completa (arquitetura, algoritmos, decisões, problemas conhecidos e próximos passos) está no **Obsidian de contextos gerais**, no projeto **Teste_AI**. Ela também é versionada neste repositório em [`vault/`](vault/_Teste_AI.md); comece pelo índice `_Teste_AI.md`.
+A documentação completa do projeto está em [`vault/_Teste_AI.md`](vault/_Teste_AI.md). Comece por esse arquivo para consultar a arquitetura, os algoritmos, as decisões técnicas, os problemas conhecidos e os próximos passos.

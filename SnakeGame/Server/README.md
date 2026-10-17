@@ -47,4 +47,4 @@ Copie `Models/model.pth` do servidor para `SnakeGame/Test/Models/` e rode `pytho
 
 ## 📚 Documentação
 
-A documentação completa (features do estado, *reward shaping*, Double DQN, Docker e os problemas do Server GA) está no **Obsidian de contextos gerais**, no projeto **Teste_AI**, módulo Server. Ela também é versionada em [`../../vault/`](../../vault/_Teste_AI.md).
+A documentação completa do projeto está em [`vault/_Teste_AI.md`](../../vault/_Teste_AI.md). Comece por esse arquivo para consultar a arquitetura, os algoritmos, as decisões técnicas, os problemas conhecidos e os próximos passos. Os detalhes do servidor estão em [`vault/modulos/SnakeGame/Server/`](<../../vault/modulos/SnakeGame/Server/!Modulo Server.md>).

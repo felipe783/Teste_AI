@@ -101,7 +101,7 @@ Os detalhes estão na documentação.
 
 ## 📚 Documentação
 
-A documentação completa (algoritmos, fluxo, Samurai, métricas e problemas conhecidos) está no **Obsidian de contextos gerais**, no projeto **Teste_AI**, módulo Sudoku. Ela também é versionada em [`../vault/`](../vault/_Teste_AI.md).
+A documentação completa do projeto está em [`vault/_Teste_AI.md`](../vault/_Teste_AI.md). Comece por esse arquivo para consultar a arquitetura, os algoritmos, as decisões técnicas, os problemas conhecidos e os próximos passos. Os detalhes deste subprojeto estão em [`vault/modulos/Sudoku/`](<../vault/modulos/Sudoku/!Modulo Sudoku.md>).
 
 ## 👨‍💻 Autor
 
