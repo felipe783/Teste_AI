@@ -5,17 +5,17 @@ class Cor:
     RESET = "\033[0m"
     CINZA = "\033[90m"
 
-def createGridSamurai():
+def createGridSamurai(): # Inicialmente tudo é None
     grid = [[None for _ in range(core.GRID_SIZE)] for _ in range(core.GRID_SIZE)]
-    for _, (row, col) in core.SAMURAI_CONFIG:
-        for i in range(9):
+    for _, (row, col) in core.SAMURAI_CONFIG: # Recebe a posicação inicial de cada Sudoku
+        for i in range(9): # Cria o Sudoku
             for j in range(9):
-                grid[row + i][col + j] = 0
+                grid[row + i][col + j] = 0 # Definir cada Possicação com 0(existe uma Celula de Sudoku vazia)
     return grid
 
-def isValidSamuraiSub(board, row, col, num, startRow, startCol):
+def isValidSamuraiSub(board, row, col, num, startRow, startCol): # Verificar a posicação valida dentro do Sudoku
     # Linha
-    for c in range(startCol, startCol + 9):
+    for c in range(startCol, startCol + 9): # 0 , 9
         if board[row][c] == num:
             return False
     # Coluna
@@ -23,8 +23,12 @@ def isValidSamuraiSub(board, row, col, num, startRow, startCol):
         if board[r][col] == num:
             return False
     # Bloco 3x3
-    localRow, localCol = row - startRow, col - startCol
-    blockRow, blockCol = startRow + (localRow // 3) * 3, startCol + (localCol // 3) * 3
+    # TODO: Estas col e Row local é apenas para melhor se localizar de do grid 33x33
+    # posição local = posição global − posição onde o Sudoku começou
+    localRow = row - startRow # Linha dentro do 3x3
+    localCol = col - startCol 
+    blockRow = startRow + (localRow // 3) * 3 
+    blockCol = startCol + (localCol // 3) * 3
     for r in range(blockRow, blockRow + 3):
         for c in range(blockCol, blockCol + 3):
             if board[r][c] == num:
@@ -32,9 +36,10 @@ def isValidSamuraiSub(board, row, col, num, startRow, startCol):
     return True
 
 def isValidSamuraiGlobally(board, row, col, num):
-    for _, (startRow, startCol) in core.SAMURAI_CONFIG:
-        if (startRow <= row < startRow + 9 and startCol <= col < startCol + 9):
-            if not isValidSamuraiSub(board, row, col, num, startRow, startCol):
+    for _, (startRow, startCol) in core.SAMURAI_CONFIG:  # Percorrer os 5 Sudokus
+        # A posicao (row, col) do Sudoku
+        if (startRow <= row < startRow + 9 and startCol <= col < startCol + 9): # Se o NUM estiver em uma posicação do Sudoku X, ele valida a sobreposicação de Sudokus
+            if not isValidSamuraiSub(board, row, col, num, startRow, startCol): # Se o número é valido dentro do Sudoku local
                 return False
     return True
 
@@ -45,7 +50,7 @@ def findEmptySamurai(board):
 
     for row in range(core.GRID_SIZE):
         for col in range(core.GRID_SIZE):
-            if board[row][col] == 0:
+            if board[row][col] == 0: # Evita None
                 validNumbers = [num for num in range(1, 10) if isValidSamuraiGlobally(board, row, col, num)]
                 numOptions = len(validNumbers)
 

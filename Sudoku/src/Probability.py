@@ -2,7 +2,7 @@ from src.BoardGeneration import *
 from src.Board import *
 import random
 import sys
-sys.setrecursionlimit(10000)
+sys.setrecursionlimit(1000000)
 
 def getCandidates(board, row , col, size):
     # candidates = [num for num in range(1,10) if isValid(board, row, col, num)]

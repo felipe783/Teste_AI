@@ -118,7 +118,9 @@ def generateSolution(board,size):
 
     return False
 
-"""def _blockDims(size):
+"""
+
+def _blockDims(size):
     best = (1, size)
     for i in range(1, math.isqrt(size) + 1):
         if size % i == 0:

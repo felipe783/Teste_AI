@@ -1,5 +1,7 @@
 import time
 import math
+import sys
+sys.setrecursionlimit(1000000)
 
 from src.SamuraiGame.BoardSamuraiGeneration import *
 from src.SamuraiGame.SamuraiBoard import *
@@ -73,7 +75,10 @@ gameType = int(input(prompt("Escolha o modo: ")))
 
 if gameType == 2:
     challenge = True
-else:
+if gameType != 1 and gameType != 2 :
+    erro("Selecione entre 1 e 2")
+    exit(0)
+if gameType == 1:
     secao("CONFIGURAÇÃO DO SUDOKU", Cor.MAGENTA)
     print(f"  {Cor.DIM}Ex: 9 --> 9x9, 81 --> 81x81{Cor.RESET}")
     SIZE = int(input(prompt("Digite o tamanho do Sudoku (9 para 9x9, 81 para 81x81): ")))
@@ -197,7 +202,7 @@ try:
         secao("Resultado", Cor.MAGENTA)
         campo("Status", status)
         if gameType == 1:
-            campo("Quadrantes corretos", f"{Cor.AMARELO}{Cor.BOLD}{correctQuadrants}/9{Cor.RESET}")
+            campo("Quadrantes corretos", f"{Cor.AMARELO}{Cor.BOLD}{correctQuadrants}/{SIZE}{Cor.RESET}")
         campo("Cobertura", f"{Cor.AMARELO}{Cor.BOLD}{coverage:.2f}%{Cor.RESET}")
         print()
 

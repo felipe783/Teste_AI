@@ -1,3 +1,5 @@
+# TODO: Estilização
+
 class Cor:
     RESET = "\033[0m"
     BOLD = "\033[1m"
