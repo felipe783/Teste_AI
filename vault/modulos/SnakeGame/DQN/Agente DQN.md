@@ -4,13 +4,13 @@ O arquivo `agent.py` é o **Orquestrador do Treino DQN v1**: monta o estado, esc
 
 Hiperparâmetros:
 
-| Constante | Valor |
-|---|---|
-| `MAX_MEMORY` | 100 000 transições |
-| `BATCH_SIZE` | 1 000 |
-| `LR` | 0.001 |
-| `gamma` | 0.9 |
-| `LONG_TRAIN_INTERVAL` | a cada 10 partidas |
+| Constante             | Valor               |
+| --------------------- | ------------------- |
+| `MAX_MEMORY`          | 100 000 transições  |
+| `BATCH_SIZE`          | 1 000               |
+| `LR`                  | 0.001               |
+| `gamma`               | 0.9                 |
+| `LONG_TRAIN_INTERVAL` | a cada 10 partidas  |
 | `CHECKPOINT_INTERVAL` | a cada 100 partidas |
 # Funcionalidades
 

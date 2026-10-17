@@ -79,3 +79,42 @@ Roda sem exploração (`explore=False`). A partida *i* usa `random.seed(seed + i
 
 > [!note] Modelo treinado
 > `Test/Models/model.pth` (não versionado) tem `n_game = 14500`, `record = 101` e `train_steps = 7 591 701`; `model_antigo.pth` tem 6 400 partidas e recorde 90. Inspecionados em 2026-10-17.
+
+# Regressão 15k × 30k (2026-10-17)
+
+**Problema relatado:** o modelo com ~15 000 partidas joga melhor que o de ~30 000. O modelo de 30 000 **não estava disponível localmente**, então essa comparação não foi refeita.
+
+## Lido no código
+
+- A descrição "lote de 1 000 ao fim de cada partida" **não bate com nenhuma versão**: a v1 usa lote de 1 000 a cada 10 partidas, e a v2 usava lote de 256 a cada partida.
+- Na v2, quase todo o aprendizado era **online**: `train_short_memory` dava 1 passo de gradiente com lote 1 a **cada passo** do ambiente. Pelo checkpoint de 14 500 partidas (7,59 M `train_steps`), são ~523 passos online para 1 do replay por partida. Como o Adam normaliza o tamanho de cada passo, um lote de 1 move os pesos tanto quanto um de 256: o replay quase não pesava, e a rede seguia as transições recentes, que são correlacionadas.
+- `model.pth` era sobrescrito a cada 100 partidas e a cada recorde, **sem avaliação**. "15k" e "30k" eram fotos de um processo oscilante, não o melhor modelo de cada fase.
+- Já existiam e foram mantidos: target network, Double DQN, Huber, clipping de gradiente e terminal tratado corretamente (`~done`).
+
+## Executado
+
+| Experimento | Resultado |
+|---|---|
+| Modelos existentes, 20 partidas gulosas pareadas (seed 12345) | 6 400 partidas: **2,1 ± 1,1** (apesar do recorde 90) · 14 500: **102,0 ± 16,3** · diferença +99,9 ± 16,0 |
+| A/B do zero, 1 000 partidas, avaliação final com seed 777 (nunca usada na seleção) | ver tabela abaixo |
+
+| Semente | A: original | B: lote 256 a cada 4 passos | B − A (pareado) |
+|---|---|---|---|
+| 0 | 58,1 ± 12,4 (mediana 64) | 83,5 ± 12,3 (mediana 88) | **+25,5 ± 14,3** |
+| 1 | 13,1 ± 9,2 (mediana **0**) | 79,6 ± 13,7 (mediana 84) | **+66,5 ± 14,9** |
+
+Condições do A/B: o mesmo ambiente (otimizado; hash idêntico ao original), a mesma rede e as mesmas recompensas, ε decaindo em 50 000 passos do ambiente nas duas variantes (no lugar de 250 000, para caber em ~1 h) e 1 thread por processo. As cópias e os modelos do experimento ficaram fora do repositório.
+
+## Conclusões
+
+- **Confirmado:** com o mesmo orçamento, a nova regra de atualização aprendeu mais e de forma mais consistente entre sementes (A variou de 13 a 58; B, de 80 a 84). A mediana 0 de A na semente 1 mostra uma política gulosa que, na maioria das partidas, nem chega à primeira comida.
+- **Confirmado:** o recorde de uma partida não indica a qualidade do checkpoint (6 400 partidas: recorde 90, média gulosa 2,1).
+- **Provável, não verificado:** a regressão 15k → 30k é a mesma oscilação vista em escala longa. Só um treino longo com o código novo confirma; o `best_model.pth` protege o melhor modelo nesse meio-tempo.
+- **Descartado por ora:** PER. O replay quase não era usado, então priorizar a amostragem dele não atacava a causa. Pode ser reavaliado se a curva de `eval_log.csv` estagnar.
+
+## Limitações e próximos passos
+
+1. O A/B cobre só 1 000 partidas e 2 sementes, com ε encurtado. Ele não prova nada sobre o regime de 15k–30k.
+2. Treinar no servidor do zero com o código novo (fazer backup de `Models/` e `logs/` antes) e acompanhar `logs/eval_log.csv` até 30 000 partidas.
+3. Comparar `best_model.pth` com o modelo antigo de 30k: `python DQN/agent.py --eval --episodes 50 --seed 777 --model <antigo> Models/best_model.pth`.
+4. Não alterados: a v1 (`SnakeGame/DQN`) tem o mesmo treino online; a cópia de `snake_gameai.py` em `Test/` não recebeu a otimização do BFS.
