@@ -36,7 +36,8 @@ Repositório de **experimentos com algoritmos de IA aplicados a jogos**. Reúne 
 | Snake DQN em servidor Docker ([[TA-RF 07]]) | Implementado (versão 2: Double DQN, 21 estados) |
 | Snake GA em servidor Docker ([[TA-RF 07]]) | Quebrado — imports, `CMD` e volumes incorretos |
 | Teste dos modelos com gravação de recordes ([[TA-RF 08]]) | Implementado para o DQN v2; opção do GA incompatível |
-| Testes automatizados | Inexistentes |
+| Snake DQN v2: melhor modelo por avaliação com sementes fixas e comparação pareada | Implementado em 2026-10-17 (`best_model.pth`, `eval_log.csv`, `--eval --model A B`) |
+| Testes automatizados | Só DQN v2: `SnakeGame/Server/Server_DQN/tests/test_dqn.py` (6 testes, `unittest`) |
 
 ## Como rodar
 
@@ -54,6 +55,8 @@ cd SnakeGame/DQN && python agent.py              # treino DQN v1 (abre janela py
 cd SnakeGame/GA && python train_genetic.py       # treino genético (headless + gráfico)
 cd SnakeGame/Server/Server_DQN && python DQN/agent.py           # DQN v2 sem Docker
 cd SnakeGame/Server/Server_DQN && python DQN/agent.py --eval    # avaliação, 100 partidas
+cd SnakeGame/Server/Server_DQN && python DQN/agent.py --eval --episodes 50 --model A.pth B.pth   # comparação pareada
+cd SnakeGame/Server/Server_DQN && python -m unittest discover -s tests -v                         # testes do DQN v2
 cd SnakeGame/Test && python play.py              # assistir o modelo jogar e gravar recordes
 
 # Servidor (Linux com Docker)
@@ -90,6 +93,8 @@ Encontrados lendo o código em 2026-10-17. Os itens marcados com ✅ foram **con
 - Sudoku: a cobertura usa `/ 9` fixo; com `SIZE = 16` passaria de 100%.
 - DQN v1: `get_action` recalcula `epsilon = max(5, 80 - n_game)`, ignorando o valor carregado do checkpoint. Depois de 75 partidas a exploração fica fixa em ~2,5% (5/201). Ver [[Agente DQN]].
 - DQN v1 não tem *target network*: o alvo de Bellman é calculado pela mesma rede que está sendo treinada. Ver [[Rede e QTrainer]].
+- DQN v1 treina com lote de 1 a cada passo do ambiente (`train_short_memory`), o mesmo problema corrigido na v2 em 2026-10-17. **A v1 não foi alterada.** Ver [[Server DQN#Regressão 15k × 30k (2026-10-17)]].
+- ✅ (corrigido 2026-10-17) DQN v2: ~99,8% dos passos de gradiente eram online com lote 1; o *replay* entrava com 1 passo por partida. `model.pth` era sobrescrito sem nenhuma avaliação, então não existia "melhor modelo" guardado. Ver [[Server DQN#Regressão 15k × 30k (2026-10-17)]].
 - Server GA não sobe: os imports usam `Teste_AI.SnakeGame.Server.GA_Server...` (pasta inexistente), o `Dockerfile` roda `DQN/agent.py`, os volumes apontam para `/Treinamento_DQN` e o `run_docker.sh` tem texto solto em `docker start ... Inicia o Container`. Ver [[Server GA]] e [[Docker]].
 - `Test/play.py`, opção 2: carrega `best_genetic.pth` (15 entradas) numa rede de 21 entradas, e o arquivo nem existe em `Test/Models`. Ver [[Play]].
 - `Test/play.py` num clone novo: `carregar_testes()` retorna `[]` quando `logs/testes.json` não existe, e `obter_recorde_anterior()` chama `.values()` nessa lista (`AttributeError`).

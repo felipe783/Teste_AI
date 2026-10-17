@@ -38,8 +38,15 @@ tail -f /home/felipe/Teste_IA/Server_DQN/logs/training_log.csv
 cd SnakeGame/Server/Server_DQN
 pip install -r requirements.txt
 python DQN/agent.py                         # treina
+python DQN/agent.py --games 15000 --seed 0  # treina até 15 000 partidas, reprodutível
 python DQN/agent.py --eval --episodes 100   # avalia sem explorar nem salvar
+python DQN/agent.py --eval --episodes 50 --model Models/a.pth Models/b.pth   # compara dois checkpoints nas mesmas sementes
+python -m unittest discover -s tests -v     # testes
 ```
+
+O treino grava `Models/model.pth` (último estado, para retomar) e `Models/best_model.pth` (melhor média em 20 partidas gulosas com sementes fixas, avaliadas a cada 500 partidas; só é substituído quando a média melhora). As avaliações ficam em `logs/eval_log.csv`.
+
+> Checkpoints anteriores a 2026-10-17 carregam normalmente, mas o `train_steps` deles contava 1 por passo do ambiente; agora conta 1 por lote (a cada 4 passos). Em checkpoints longos, o ε já está no mínimo, então não muda nada.
 
 ### Levar o modelo para assistir
 

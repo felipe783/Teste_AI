@@ -51,7 +51,7 @@ Para testar o Sudoku sem interação, use uma **cópia fora do repositório**, p
 printf '1\n9\n2\n3\n3\n' | PYTHONIOENCODING=utf-8 python main.py   # tradicional 9x9, 2 jogos, difícil, backtracking
 ```
 
-Estado do ambiente (2026-10-17): a `.venv` tem `torch 2.13.0+cpu` e `pygame 2.6.1`, mas **não tem `matplotlib`**, necessário ao `Helper.py` dos treinos locais. **Peça autorização antes de instalar.** Não há testes automatizados.
+Estado do ambiente (2026-10-17): a `.venv` tem `torch 2.13.0+cpu` e `pygame 2.6.1`, mas **não tem `matplotlib`**, necessário ao `Helper.py` dos treinos locais. **Peça autorização antes de instalar.** Só o DQN v2 tem testes: `cd SnakeGame\Server\Server_DQN; python -m unittest discover -s tests -v` (~1 min; rodam em diretório temporário).
 
 ## Regras deste projeto
 

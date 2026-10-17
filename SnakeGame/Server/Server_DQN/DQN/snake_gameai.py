@@ -11,6 +11,9 @@ class Direction(Enum):
     DOWN = 4
 
 Point = namedtuple("Point", "x y")
+# Criado uma vez: _next_point roda milhões de vezes dentro do BFS
+OFFSETS = {Direction.RIGHT: (BLOCK_SIZE, 0), Direction.LEFT: (-BLOCK_SIZE, 0),
+           Direction.UP: (0, -BLOCK_SIZE), Direction.DOWN: (0, BLOCK_SIZE)}
 
 class SnakeGameAI:
     def __init__(self, w=640, h=480):
@@ -55,23 +58,24 @@ class SnakeGameAI:
 
     @staticmethod
     def _next_point(point, direction):
-        offsets = {Direction.RIGHT: (BLOCK_SIZE, 0), Direction.LEFT: (-BLOCK_SIZE, 0),
-                   Direction.UP: (0, -BLOCK_SIZE), Direction.DOWN: (0, BLOCK_SIZE)}
-        dx, dy = offsets[direction]
+        dx, dy = OFFSETS[direction]
         return Point(point.x + dx, point.y + dy)
 
     def _reachable_area(self, start, blocked):
         if not self._inside_board(start) or start in blocked:
             return set()
         visited, queue = {start}, deque([start])
+        w, h, steps = self.w, self.h, tuple(OFFSETS.values())
 
+        # Laço quente (~5 BFS por passo): tuplas simples em vez de Point/Direction,
+        # pois tupla e Point com os mesmos valores são iguais e têm o mesmo hash
         while queue:
-            point = queue.popleft()
+            x, y = queue.popleft()
 
-            for direction in Direction:
-                neighbour = self._next_point(point, direction)
+            for dx, dy in steps:
+                neighbour = (x + dx, y + dy)
 
-                if (self._inside_board(neighbour) and neighbour not in blocked
+                if (0 <= neighbour[0] < w and 0 <= neighbour[1] < h and neighbour not in blocked
                         and neighbour not in visited):
                     visited.add(neighbour)
                     queue.append(neighbour)

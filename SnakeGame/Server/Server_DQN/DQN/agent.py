@@ -3,7 +3,7 @@ import csv
 import os
 import random
 from collections import deque
-from statistics import mean, median
+from statistics import mean, median, stdev
 import numpy as np
 import torch
 from model import DEVICE, Linear_QNet, QTrainer
@@ -18,16 +18,24 @@ STATE_SIZE = 21 # Qntd Estados do Jogo
 HIDDEN_SIZE = 256 
 GAMMA = 0.95 # Fator de Desconto
 """Decisões de curto prazo(como bater na parede/corpo) valem mais do que recompensa muito distante"""
-TARGET_UPDATE_FREQ = 1_000 # 
+TRAIN_EVERY_STEPS = 4 # 1 passo de gradiente (lote do replay) a cada 4 passos do ambiente
+# train_steps agora conta só passos de gradiente; os dois valores abaixo foram divididos por
+# TRAIN_EVERY_STEPS para manter os cronogramas antigos medidos em passos do ambiente (1 000 e 250 000)
+TARGET_UPDATE_FREQ = 1_000 // TRAIN_EVERY_STEPS
 EPSILON_START = 1.0 # Exploração(100%)
 EPSILON_MIN = 0.02 # Min de Exploração (2%)
-EPSILON_DECAY_STEPS = 250_000 # Total de Passos até a exploração ir pro minimo
+EPSILON_DECAY_STEPS = 250_000 // TRAIN_EVERY_STEPS # Passos de treino até a exploração ir pro minimo
 CHECKPOINT_EVERY_GAMES = 100  # Checkpoint
+EVAL_EVERY_GAMES = 500 # Avaliação gulosa (epsilon=0) para escolher o melhor modelo
+EVAL_EPISODES = 20
+EVAL_SEED = 12_345 # Sementes fixas: todo checkpoint enfrenta a mesma sequência de comidas
 
 MODEL_DIR = "Models"
 MODEL_PATH = os.path.join(MODEL_DIR, "model.pth")
+BEST_MODEL_PATH = os.path.join(MODEL_DIR, "best_model.pth")
 LOG_DIR = "logs"
 LOG_FILE = os.path.join(LOG_DIR, "training_log.csv")
+EVAL_LOG_FILE = os.path.join(LOG_DIR, "eval_log.csv")
 LOG_MAX_SIZE_BYTES = 5 * 1024 * 1024 * 1024 # 5GB
 
 
@@ -68,6 +76,7 @@ class TrainingLogger:
 class Agent:
     def __init__(self, load_checkpoint=True):
         self.n_game = self.record = 0
+        self.best_eval_mean = -1.0 # Melhor média de avaliação já salva em BEST_MODEL_PATH
         """Guarda tudo em um Buffer "Memory" e com isso sorteia aleatoriamente a Experiencia(Seria o Batch Size(256))"""
         self.memory = deque(maxlen=MAX_MEMORY) 
         # deque: double-ended queue, uma função do Colletions onde é otimizada para inserir e remover itens rapidamente nas duas extremidades
@@ -92,12 +101,12 @@ class Agent:
         fraction = min(1.0, self.trainer.train_steps / EPSILON_DECAY_STEPS) # Vai de 0 a 1 
         return EPSILON_START + fraction * (EPSILON_MIN - EPSILON_START) # interpolação linear
 
-    def load_checkpoint(self):
-        if not os.path.exists(MODEL_PATH):
-            print(f"Nenhum checkpoint encontrado em: {MODEL_PATH}", flush=True)
+    def load_checkpoint(self, path=MODEL_PATH):
+        if not os.path.exists(path):
+            print(f"Nenhum checkpoint encontrado em: {path}", flush=True)
             return False
         try:
-            checkpoint = torch.load(MODEL_PATH, map_location=DEVICE)
+            checkpoint = torch.load(path, map_location=DEVICE)
         except (OSError, RuntimeError, ValueError) as error:
             print(f"Não foi possível ler o checkpoint; iniciando rede nova: {error}", flush=True)
             return False
@@ -134,6 +143,7 @@ class Agent:
 
             self.n_game = checkpoint.get("n_game", 0) # Se não existir vai dar 0 pra não quebrar o Sistema
             self.record = checkpoint.get("record", 0)
+            self.best_eval_mean = checkpoint.get("best_eval_mean", -1.0)
 
             # Formato antigo não possuía train_steps, assim volta a explorar.
             self.trainer.train_steps = checkpoint.get("train_steps", 0)
@@ -145,8 +155,8 @@ class Agent:
               f"train_steps={self.trainer.train_steps}", flush=True)
         return True
 
-    def save_checkpoint(self):
-        os.makedirs(MODEL_DIR, exist_ok=True)
+    def save_checkpoint(self, path=MODEL_PATH):
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
         torch.save({
                 "checkpoint_version": 2, 
                 "state_size": STATE_SIZE,
@@ -155,9 +165,11 @@ class Agent:
                 "optimizer_state_dict": self.trainer.optimizer.state_dict(),
                 "n_game": self.n_game, 
                 "record": self.record,
-                "train_steps": self.trainer.train_steps
-                }, MODEL_PATH)
-        print(f"Checkpoint salvo: {MODEL_PATH}", flush=True)
+                "train_steps": self.trainer.train_steps,
+                "best_eval_mean": self.best_eval_mean,
+                "train_every_steps": TRAIN_EVERY_STEPS # train_steps de checkpoints antigos contam 1 por passo do ambiente
+                }, path)
+        print(f"Checkpoint salvo: {path}", flush=True)
 
     def get_state(self, game):
         head, tail = game.head, game.snake[-1] # Posição da Cabeça e cauda 
@@ -187,7 +199,8 @@ class Agent:
 
     def train_long_memory(self): 
         if len(self.memory) >= BATCH_SIZE: # Treino com Replay Memory
-            self.trainer.train_step(*zip(*random.sample(self.memory, BATCH_SIZE)))
+            # np.asarray: o torch converte uma lista de arrays numpy muito devagar (aviso do próprio PyTorch)
+            return self.trainer.train_step(*map(np.asarray, zip(*random.sample(self.memory, BATCH_SIZE))))
             """
             *zip --> passa cada Tupla da Lista como um argumento separada e com isso agrupa o primeiro elemento de cada argumento junto, o segundo elemento de cada argumento junto
             Antes:
@@ -203,9 +216,11 @@ class Agent:
             E pq fazer isso?
             O train_step precisa de 5 argumentos separados cada um contendo conjuntos com 256 elementos
             """
+        return None
 
-    def train_short_memory(self, state, action, reward, next_state, done): # Treina a Rede Imediato com uma unica experiencia
-        self.trainer.train_step(state, action, reward, next_state, done)
+    # train_short_memory (1 passo de gradiente com lote de 1 a cada passo do ambiente) foi removido:
+    # eram ~500 atualizações online e correlacionadas por partida contra 1 do replay, e o Adam dá
+    # a cada passo um tamanho parecido independentemente do lote, então o replay quase não pesava.
 
     def get_action(self, state, explore=True):
         # TODO: Um tensor é uma estrutura de dados que guarda números organizados em uma grade de N dimensões 
@@ -252,23 +267,64 @@ class Agent:
         action[move] = 1
         return action
 
-def train():
+def run_eval(agent, episodes, seed=EVAL_SEED):
+    """Joga partidas gulosas (epsilon=0) com sementes fixas e devolve os scores.
+    A partida i usa random.seed(seed + i), então modelos diferentes enfrentam as mesmas comidas
+    e a comparação fica pareada. O estado do random do treino é restaurado no final."""
+    rng_state = random.getstate()
+    scores = []
+    try:
+        for i in range(episodes):
+            random.seed(seed + i)
+            game, done = SnakeGameAI(), False
+            while not done:
+                _, done, score = game.play_step(agent.get_action(agent.get_state(game), explore=False))
+            scores.append(score)
+    finally:
+        random.setstate(rng_state)
+    return scores
+
+
+def log_eval(n_game, scores, best, mean_loss):
+    exists = os.path.exists(EVAL_LOG_FILE)
+    with open(EVAL_LOG_FILE, "a", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        if not exists:
+            writer.writerow(["partida", "media", "mediana", "min", "max", "melhor_media", "loss_media"])
+        writer.writerow([n_game, f"{mean(scores):.3f}", median(scores), min(scores), max(scores),
+                         f"{best:.3f}", "" if mean_loss is None else f"{mean_loss:.5f}"])
+
+
+def seed_everything(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+
+
+def train(max_games=None):
     agent, logger, game = Agent(), TrainingLogger(), SnakeGameAI()
     logger.sync_with_agent(agent)
     print(f"Treinamento DQN iniciado em CPU | modelo: {MODEL_PATH}", flush=True)
+    env_steps, losses = 0, []
+    state_new = None
 
     try:
-        while True:
-            state_old = agent.get_state(game)  # Pega o estado do Jogo
+        while max_games is None or agent.n_game < max_games:
+            # O próximo estado do passo anterior é o estado atual: evita repetir os 3 BFS do get_state
+            state_old = agent.get_state(game) if state_new is None else state_new
             action = agent.get_action(state_old) # Agente toma uma Ação conforme o estado
             reward, done, score = game.play_step(action) # Executa a ação
             state_new = agent.get_state(game) # Pega o Novo estado
-            agent.train_short_memory(state_old, action, reward, state_new, done) # Treina a rede de imediato
             agent.remember(state_old, action, reward, state_new, done) # guarda essa transição em um buffer de replay
+            env_steps += 1
+            if env_steps % TRAIN_EVERY_STEPS == 0:
+                loss = agent.train_long_memory() # Treina com um lote aleatório do Buffer
+                if loss is not None:
+                    losses.append(loss)
             if done:
                 game.reset()
+                state_new = None # Depois do reset o estado precisa ser recalculado
                 agent.n_game += 1
-                agent.train_long_memory() # Treina com as Experiencias no Buffer
                 new_record = score > agent.record
 
                 if new_record:
@@ -276,28 +332,48 @@ def train():
                     print(f"Novo recorde: {score}", flush=True)
                 logger.log_game(score, agent.epsilon)
 
+                if agent.n_game % EVAL_EVERY_GAMES == 0:
+                    agent.model.eval()
+                    scores = run_eval(agent, EVAL_EPISODES)
+                    agent.model.train()
+                    improved = mean(scores) > agent.best_eval_mean
+                    if improved: # Só substitui o melhor modelo se a média gulosa melhorou
+                        agent.best_eval_mean = mean(scores)
+                        agent.save_checkpoint(BEST_MODEL_PATH)
+                    log_eval(agent.n_game, scores, agent.best_eval_mean, mean(losses) if losses else None)
+                    print(f"Avaliação partida {agent.n_game}: média={mean(scores):.2f} "
+                          f"melhor_média={agent.best_eval_mean:.2f}{' (novo melhor)' if improved else ''}", flush=True)
+                    losses.clear()
+
+                # O recorde de uma partida é ruidoso; o melhor modelo é escolhido pela avaliação acima
                 if new_record or agent.n_game % CHECKPOINT_EVERY_GAMES == 0:
-                    agent.save_checkpoint() # Se bateu um Record salva aquele Modelo
+                    agent.save_checkpoint()
+        agent.save_checkpoint()
     except KeyboardInterrupt:
         print("\nTreinamento interrompido; salvando continuidade...", flush=True)
         agent.save_checkpoint()
 
 
-def evaluate(episodes): # Avaliação da Rede Reunal 
-    agent = Agent()
-    if not agent.checkpoint_loaded:
-        raise RuntimeError("Não há checkpoint compatível para avaliar.")
-    
-    agent.model.eval() # coloca a rede neural em modo de avaliação, isso desliga comportamentos que só devem existir durante o treino, como Dropout e BatchNorm calculando estatísticas de batch
-    scores = []
+def evaluate(episodes, model_paths, seed): # Avaliação da Rede Reunal
+    all_scores = []
+    for path in model_paths:
+        agent = Agent(load_checkpoint=False)
+        if not agent.load_checkpoint(path):
+            raise RuntimeError(f"Não há checkpoint compatível para avaliar em {path}.")
+        agent.model.eval() # coloca a rede neural em modo de avaliação, isso desliga comportamentos que só devem existir durante o treino, como Dropout e BatchNorm calculando estatísticas de batch
+        scores = run_eval(agent, episodes, seed)
+        all_scores.append(scores)
+        sd = stdev(scores) if len(scores) > 1 else 0.0
+        print(f"{path} (partidas de treino={agent.n_game}) | {episodes} partidas, epsilon=0, seed={seed}: "
+              f"média={mean(scores):.2f} ± {1.96 * sd / len(scores) ** 0.5:.2f} (IC95%), "
+              f"mediana={median(scores):.1f}, min={min(scores)}, max={max(scores)}", flush=True)
 
-    for _ in range(episodes): # Loop de partida
-        game, done = SnakeGameAI(), False
-        while not done: 
-            _, done, score = game.play_step(agent.get_action(agent.get_state(game), explore=False))
-        scores.append(score)
-    print(f"Avaliação ({episodes} partidas, epsilon=0): melhor={max(scores)}, "
-          f"média={mean(scores):.2f}, mediana={median(scores):.2f}", flush=True)
+    if len(all_scores) == 2 and episodes > 1:
+        # Mesmas sementes nos dois modelos: a diferença por partida remove a sorte da comida
+        diffs = [b - a for a, b in zip(*all_scores)]
+        half = 1.96 * stdev(diffs) / len(diffs) ** 0.5
+        print(f"Diferença pareada ({model_paths[1]} - {model_paths[0]}): {mean(diffs):.2f} ± {half:.2f} (IC95%) "
+              f"-> {'significativa' if abs(mean(diffs)) > half else 'não significativa'}", flush=True)
 
 
 if __name__ == "__main__": # garante que esse bloco só executa quando o arquivo é rodado diretamente (não quando é importado como módulo em outro script)
@@ -306,14 +382,19 @@ if __name__ == "__main__": # garante que esse bloco só executa quando o arquivo
     parser.add_argument("--eval", action="store_true", help="avalia sem treinar ou salvar")
     # Store_true --> é o padrão idiomático do argparse para flags booleanas(não precisa passar --eval True)
     parser.add_argument("--episodes", type=int, default=100)
+    parser.add_argument("--model", nargs="+", default=[MODEL_PATH], help="checkpoint(s) a avaliar; dois = comparação pareada")
+    parser.add_argument("--seed", type=int, default=None, help="semente (treino: reprodutibilidade; avaliação: padrão EVAL_SEED)")
+    parser.add_argument("--games", type=int, default=None, help="para o treino ao chegar neste total de partidas")
     args = parser.parse_args()
-    
+
     if args.eval:
         if args.episodes < 1:
             parser.error("--episodes deve ser pelo menos 1")
-        evaluate(args.episodes)
+        evaluate(args.episodes, args.model, EVAL_SEED if args.seed is None else args.seed)
     else:
-        train()
+        if args.seed is not None:
+            seed_everything(args.seed)
+        train(args.games)
 """
 python snake.py         --> treina
 python snake.py --eval  --> avalia com 100 episódios (padrão)

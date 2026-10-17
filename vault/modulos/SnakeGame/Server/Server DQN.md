@@ -9,9 +9,9 @@ Os arquivos de `Server/Server_DQN/DQN/` formam o **DQN v2**: reescrita do [[Agen
 | `LR` | 0.001 | 2.5e-4 |
 | `GAMMA` | 0.9 | 0.95 |
 | Loss | MSE | **SmoothL1 (Huber)** |
-| ε | `max(5, 80 − partidas)/201` | linear de **1.0 → 0.02** em 250 000 passos de treino |
-| Target network | — | atualizada a cada **1 000** passos |
-| Treino longo | a cada 10 partidas | ao fim de **toda** partida |
+| ε | `max(5, 80 − partidas)/201` | linear de **1.0 → 0.02** em 250 000 passos do ambiente (62 500 passos de treino) |
+| Target network | — | atualizada a cada **1 000** passos do ambiente (250 passos de treino) |
+| Treino | lote 1 a cada passo + lote 1 000 a cada 10 partidas | **lote 256 do replay a cada 4 passos** (desde 2026-10-17; antes: lote 1 a cada passo + lote 256 por partida) |
 # Funcionalidades
 
 ## get_state (21 entradas)
@@ -61,7 +61,9 @@ torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=10.0)
 
 ## Checkpoint e Log
 
-- `Models/model.pth` (relativo ao diretório atual): pesos, *target*, otimizador, `n_game`, `record`, `train_steps`, `checkpoint_version = 2`, `state_size`. É salvo a cada 100 partidas, a cada novo recorde e no `Ctrl+C`.
+- `Models/model.pth` (relativo ao diretório atual): **último** estado — pesos, *target*, otimizador, `n_game`, `record`, `train_steps`, `best_eval_mean`, `train_every_steps`, `checkpoint_version = 2`, `state_size`. É salvo a cada 100 partidas, a cada novo recorde e no `Ctrl+C`.
+- `Models/best_model.pth`: **melhor** modelo pela avaliação gulosa (ver [[#Regressão 15k × 30k (2026-10-17)]]). Só é sobrescrito quando a média melhora; `best_eval_mean` vai junto no `model.pth` para que uma retomada não rebaixe o melhor.
+- `logs/eval_log.csv`: `partida, media, mediana, min, max, melhor_media, loss_media` a cada avaliação.
 - `load_checkpoint` aceita o formato antigo e **recusa** checkpoints com número de entradas diferente, iniciando uma rede nova em vez de misturar representações.
 - `TrainingLogger` grava `logs/training_log.csv` (`partida, score, max, epsilon`) e **apaga** o arquivo ao passar de 5 GB.
 
@@ -69,9 +71,11 @@ torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=10.0)
 
 ````bash
 python DQN/agent.py --eval --episodes 20
+python DQN/agent.py --eval --episodes 50 --model Models/m15k.pth Models/m30k.pth   # comparação pareada
+python DQN/agent.py --games 15000 --seed 0                                           # treino com orçamento e semente
 ````
 
-Roda sem exploração (`explore=False`) e imprime melhor, média e mediana.
+Roda sem exploração (`explore=False`). A partida *i* usa `random.seed(seed + i)` (padrão `EVAL_SEED = 12345`), então todos os modelos enfrentam a mesma sequência de comidas e, como a política gulosa é determinística, o resultado de um checkpoint é reprodutível. Imprime média ± IC95%, mediana, mínimo e máximo; com dois modelos, imprime a **diferença pareada** por partida e se ela é significativa.
 
 > [!note] Modelo treinado
 > `Test/Models/model.pth` (não versionado) tem `n_game = 14500`, `record = 101` e `train_steps = 7 591 701`; `model_antigo.pth` tem 6 400 partidas e recorde 90. Inspecionados em 2026-10-17.
