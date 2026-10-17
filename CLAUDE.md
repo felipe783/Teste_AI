@@ -22,6 +22,8 @@ O índice abaixo é carregado em toda sessão. As notas detalhadas ficam em `vau
 | Teste visual e gravação de recordes | `vault/modulos/SnakeGame/Test/Play.md` |
 | Sudoku: fluxo, geradores, resolvedores, Samurai, logs | `vault/modulos/Sudoku/` |
 
+Conceitos transversais (avaliação de modelos, caminhos, Docker, testes…), com aprendizados deste e de outros projetos: `E:/Downloads/!Faculdade/Contexto Projetos/Conhecimento/_Conhecimento.md`. Leia sob demanda, quando a tarefa tocar o assunto.
+
 ## Mapa do código
 
 - `SnakeGame/DQN/`: DQN v1 local. `agent.py` treina, `model.py` tem `Linear_QNet` + `QTrainer` (sem target network), `snake_gameai.py` usa pygame e grava vídeo.
