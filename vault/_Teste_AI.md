@@ -1,13 +1,14 @@
 ---
+Tipo: projeto
 Projeto: Teste_AI
-Status: experimental
+Status: ativo
 Stack:
   - Python
   - PyTorch
   - pygame
   - OpenCV
   - Docker
-Codigo: "E:/Downloads/!Faculdade/Teste_AI"
+Codigo: "Teste_AI"
 Repositorio: "https://github.com/felipe783/Teste_AI"
 Atualizado: 2026-10-17
 ---
@@ -17,7 +18,7 @@ Repositório de **experimentos com algoritmos de IA aplicados a jogos**. Reúne 
 - **SnakeGame**: uma IA aprende a jogar Snake por **Aprendizado por Reforço (DQN)** e por **Algoritmo Genético (GA)**, com PyTorch.
 - **Sudoku**: geração e resolução de Sudoku tradicional (NxN) e Samurai com **lógica pura**: probabilidade ponderada e Backtracking.
 
-- **Código:** raiz deste repositório; a documentação fica em `vault/` (local: `E:\Downloads\!Faculdade\Teste_AI`)
+- **Código:** raiz deste repositório; a documentação fica em `vault/`
 - **Entrada:** terminal (menus interativos no Sudoku e no teste do Snake; scripts de treino no SnakeGame)
 - **Saída:** tabuleiros e métricas no terminal, `results.json` (Sudoku), checkpoints `.pth`, logs (`.json`/`.csv`) e vídeos `.mp4` (SnakeGame)
 - **Origem:** o ambiente Snake parte do repositório [vedantgoswami/SnakeGameAI](https://github.com/vedantgoswami/SnakeGameAI)
