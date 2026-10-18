@@ -95,7 +95,6 @@ Encontrados lendo o código em 2026-10-17. Os itens marcados com ✅ foram **con
 - DQN v1: `get_action` recalcula `epsilon = max(5, 80 - n_game)`, ignorando o valor carregado do checkpoint. Depois de 75 partidas a exploração fica fixa em ~2,5% (5/201). Ver [[Agente DQN]].
 - DQN v1 não tem *target network*: o alvo de Bellman é calculado pela mesma rede que está sendo treinada. Ver [[Rede e QTrainer]].
 - DQN v1 treina com lote de 1 a cada passo do ambiente (`train_short_memory`), o mesmo problema corrigido na v2 em 2026-10-17. **A v1 não foi alterada.** Ver [[Server DQN#Regressão 15k × 30k (2026-10-17)]].
-- ✅ (corrigido 2026-10-17) DQN v2: ~99,8% dos passos de gradiente eram online com lote 1; o *replay* entrava com 1 passo por partida. `model.pth` era sobrescrito sem nenhuma avaliação, então não existia "melhor modelo" guardado. Ver [[Server DQN#Regressão 15k × 30k (2026-10-17)]].
 - Server GA não sobe: os imports usam `Teste_AI.SnakeGame.Server.GA_Server...` (pasta inexistente), o `Dockerfile` roda `DQN/agent.py`, os volumes apontam para `/Treinamento_DQN` e o `run_docker.sh` tem texto solto em `docker start ... Inicia o Container`. Ver [[Server GA]] e [[Docker]].
 - `Test/play.py`, opção 2: carrega `best_genetic.pth` (15 entradas) numa rede de 21 entradas, e o arquivo nem existe em `Test/Models`. Ver [[Play]].
 - `Test/play.py` num clone novo: `carregar_testes()` retorna `[]` quando `logs/testes.json` não existe, e `obter_recorde_anterior()` chama `.values()` nessa lista (`AttributeError`).
