@@ -1,7 +1,7 @@
 # Sobre os Arquivos
 
 Os arquivos `gameConfig.py` e `BoardGeneration.py` são **Responsáveis por Criar o Puzzle**: definem quantas células ficam visíveis e geram um tabuleiro completo e válido, do qual são removidos números.
-# setupGame^setup
+# setupGame
 
 Responsabilidade:
 - Converter a dificuldade em **quantidade de células reveladas**.
