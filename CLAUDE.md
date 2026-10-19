@@ -22,7 +22,7 @@ O índice abaixo é carregado em toda sessão. As notas detalhadas ficam em `vau
 | Teste visual e gravação de recordes | `vault/modulos/SnakeGame/Test/Play.md` |
 | Sudoku: fluxo, geradores, resolvedores, Samurai, logs | `vault/modulos/Sudoku/` |
 
-Conceitos transversais (avaliação de modelos, caminhos, Docker, testes…), com aprendizados deste e de outros projetos: `E:/Downloads/!Faculdade/Contexto Projetos/Conhecimento/_Conhecimento.md`. Leia sob demanda, quando a tarefa tocar o assunto.
+Conceitos transversais (avaliação de modelos, caminhos, Docker, testes…), com aprendizados deste e de outros projetos: `../Contexto-Projetos/Conhecimento/_Conhecimento.md`. Leia sob demanda, quando a tarefa tocar o assunto.
 
 ## Mapa do código
 
@@ -77,7 +77,7 @@ Ao alterar comportamento, atualize na mesma tarefa:
 2. A nota do módulo afetado.
 3. O README do subprojeto (`README.md`, `SnakeGame/README.md`, `SnakeGame/Server/README.md` ou `Sudoku/README.md`), se mudar comando ou saída.
 
-Convenções do vault (o mesmo do Obsidian em `Contexto Projetos/Teste_AI`, via junction):
-- Frontmatter: siga a tabela de **Convenções** em `E:/Downloads/!Faculdade/Contexto Projetos/Contexto Geral.md`, que é a única definição (`Tipo`, `Status` controlado, `Codigo` relativo) e tem templates em `_templates/`.
+Convenções do vault (o mesmo do Obsidian em `Contexto-Projetos/Teste_AI`, via junction):
+- Frontmatter: siga a tabela de **Convenções** em `../Contexto-Projetos/Contexto Geral.md`, que é a única definição (`Tipo`, `Status` controlado, `Codigo` relativo) e tem templates em `_templates/`.
 - Nomes de nota únicos no vault inteiro: notas genéricas levam `(Teste_AI)`; requisitos usam `TA-RF NN`.
 - Links `[[Nome da Nota]]`. Separe o que foi **executado** do que foi **lido no código**, com data.
