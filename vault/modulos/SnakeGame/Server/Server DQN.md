@@ -2,16 +2,16 @@
 
 Os arquivos de `Server/Server_DQN/DQN/` formam o **DQN v2**: reescrita do [[Agente DQN|v1]] com estado mais rico, *target network*, Double DQN, *reward shaping* e log em CSV. É o modelo usado no [[Play]].
 
-| Constante | v1 | v2 |
-|---|---|---|
-| Entradas | 11 | **21** |
-| `BATCH_SIZE` | 1 000 | 256 |
-| `LR` | 0.001 | 2.5e-4 |
-| `GAMMA` | 0.9 | 0.95 |
-| Loss | MSE | **SmoothL1 (Huber)** |
-| ε | `max(5, 80 − partidas)/201` | linear de **1.0 → 0.02** em 250 000 passos do ambiente (62 500 passos de treino) |
-| Target network | — | atualizada a cada **1 000** passos do ambiente (250 passos de treino) |
-| Treino | lote 1 a cada passo + lote 1 000 a cada 10 partidas | **lote 256 do replay a cada 4 passos** (desde 2026-10-17; antes: lote 1 a cada passo + lote 256 por partida) |
+| Constante      | v1                                                  | v2                                                                                                           |
+| -------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Entradas       | 11                                                  | **21**                                                                                                       |
+| `BATCH_SIZE`   | 1 000                                               | 256                                                                                                          |
+| `LR`           | 0.001                                               | 2.5e-4                                                                                                       |
+| `GAMMA`        | 0.9                                                 | 0.95                                                                                                         |
+| Loss           | MSE                                                 | **SmoothL1 (Huber)**                                                                                         |
+| ε              | `max(5, 80 − partidas)/201`                         | linear de **1.0 → 0.02** em 250 000 passos do ambiente (62 500 passos de treino)                             |
+| Target network | —                                                   | atualizada a cada **1 000** passos do ambiente (250 passos de treino)                                        |
+| Treino         | lote 1 a cada passo + lote 1 000 a cada 10 partidas | **lote 256 do replay a cada 4 passos** (desde 2026-10-17; antes: lote 1 a cada passo + lote 256 por partida) |
 # Funcionalidades
 
 ## get_state (21 entradas)
