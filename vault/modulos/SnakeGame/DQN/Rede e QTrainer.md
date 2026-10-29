@@ -1,5 +1,8 @@
 # Sobre o Arquivo
 
+> [!warning] Código removido em 2026-10-29
+> A pasta `SnakeGame/DQN/` (v1) foi apagada do repositório no commit `2e9f18e`. Esta nota fica como registro histórico, porque a [[Server DQN|v2]] é comparada com ela. Para ler o código antigo: `git show dfbc504:SnakeGame/DQN/<arquivo>`.
+
 O arquivo `model.py` define a **Rede Neural** (`Linear_QNet`) e o **Treinador** (`QTrainer`), que aplica a equação de Bellman.
 # Linear_QNet
 

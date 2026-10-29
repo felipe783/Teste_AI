@@ -12,7 +12,6 @@ O Teste_AI é um repositório de experimentos com IA aplicada a jogos. O SnakeGa
 ## Entrada principal
 
 - [[Main Sudoku|Sudoku/main.py]]: menu interativo no terminal.
-- [[Agente DQN|SnakeGame/DQN/agent.py]] e [[Treino Genético|SnakeGame/GA/train_genetic.py]]: treinos locais.
 - [[Server DQN|Server_DQN/DQN/agent.py]]: treino/avaliação no servidor (`--eval`).
 - [[Play|SnakeGame/Test/play.py]]: execução e gravação dos modelos treinados.
 ## Saída principal
@@ -24,8 +23,8 @@ O Teste_AI é um repositório de experimentos com IA aplicada a jogos. O SnakeGa
 
 - [[!Modulo Sudoku]]: geração, resolução, Samurai e métricas.
 - [[!Modulo SnakeGame]]: [[Ambiente Snake]] e os quatro submódulos abaixo.
-- [[!Modulo DQN]]: Deep Q-Network v1, local, com pygame.
-- [[!Modulo GA]]: neuroevolução com mutação auto-adaptativa.
+- [[!Modulo DQN]]: Deep Q-Network v1, local, com pygame (código removido em 2026-10-29).
+- [[!Modulo GA]]: neuroevolução com mutação auto-adaptativa (código só em `Server_GA`).
 - [[!Modulo Server]]: versões headless para Docker (DQN v2 e GA).
 - [[!Modulo Test]]: avaliação visual com gravação de recordes.
 - [[!Modulo Ferramentas]]: inspeção de checkpoints.

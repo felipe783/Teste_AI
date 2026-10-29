@@ -12,7 +12,7 @@ pip install numpy
 ````
 
 [**pygame**](https://www.pygame.org/)
-Renderiza o jogo Snake em janela nas versões com interface ([[Ambiente Snake]]): DQN v1 e Test.
+Renderiza o jogo Snake em janela na versão com interface ([[Ambiente Snake]]): Test.
 ````
 pip install pygame
 ````
@@ -24,13 +24,13 @@ pip install opencv-python
 ````
 
 [**Matplotlib**](https://matplotlib.org/)
-Desenha o gráfico de score e média em tempo real durante os treinos locais (`Helper.py`).
+Desenhava o gráfico de score e média dos treinos locais (`Helper.py`). **Nenhum script usa desde 2026-10-29**, quando o DQN v1 e o GA local foram removidos; continua no `requirements.txt`.
 ````
 pip install matplotlib
 ````
 
 [**IPython**](https://ipython.org/)
-Usado pelo `Helper.py` (`IPython.display`) para limpar e redesenhar o gráfico.
+Era usado pelo `Helper.py` (`IPython.display`) para redesenhar o gráfico. **Sem uso desde 2026-10-29**; continua no `requirements.txt`.
 ````
 pip install ipython
 ````
@@ -47,4 +47,4 @@ Instalar tudo de uma vez:
 pip install -r SnakeGame/requirements.txt
 ````
 
-> Em 2026-10-17 a `.venv` da raiz tinha `torch 2.13.0+cpu` e `pygame 2.6.1`, mas não tinha `matplotlib`: os treinos locais falham no `import` do `Helper.py` até instalar.
+> Em 2026-10-17 a `.venv` da raiz tinha `torch 2.13.0+cpu` e `pygame 2.6.1`, sem `matplotlib`, que só os treinos locais (removidos em 2026-10-29) usavam.

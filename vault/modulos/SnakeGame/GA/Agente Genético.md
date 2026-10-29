@@ -1,11 +1,14 @@
 # Sobre o Arquivo
 
+> [!warning] Versão local removida em 2026-10-29
+> A pasta `SnakeGame/GA/` foi apagada no commit `0a73702`. O algoritmo descrito aqui continua só na cópia `SnakeGame/Server/Server_GA/GA/`, com as diferenças listadas em [[Server GA]], e essa cópia **não executa** no estado atual. Para ler o código antigo: `git show dfbc504:SnakeGame/GA/<arquivo>`.
+
 O arquivo `agent.py` define o **Indivíduo da População**: a rede, o estado de entrada, a avaliação por fitness, os operadores genéticos e o log por geração.
 # Funcionalidades
 
 ## get_state (15 entradas)
 
-As 11 entradas do [[Agente DQN|DQN v1]], mais:
+As 11 entradas do [[Agente DQN|DQN v1]] (removido), mais:
 - **perigo a 2 blocos** (reto, direita, esquerda), para enxergar além da célula imediata;
 - **tamanho relativo da cobra**: `len(snake) / 768`.
 

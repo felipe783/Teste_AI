@@ -1,5 +1,8 @@
 # Sobre o Arquivo
 
+> [!warning] Código removido em 2026-10-29
+> A pasta `SnakeGame/DQN/` (v1) foi apagada do repositório no commit `2e9f18e`. Esta nota fica como registro histórico, porque a [[Server DQN|v2]] é comparada com ela. Para ler o código antigo: `git show dfbc504:SnakeGame/DQN/<arquivo>`.
+
 O arquivo `agent.py` é o **Orquestrador do Treino DQN v1**: monta o estado, escolhe ações, guarda experiências, chama o treino e salva checkpoints e vídeos.
 
 Hiperparâmetros:
@@ -48,4 +51,4 @@ else:
 - **Gráfico**: `Helper.plot` redesenha score e média com Matplotlib/IPython a cada partida.
 
 > [!note] Checkpoint versionado
-> `models/checkpoint.pth` (no Git) tem `n_game = 11526`, `record = 120` e rede `11 → 256 → 3`. `models/model.pth` é um `state_dict` puro, do formato antigo. Inspecionado com [[Leitor PTH]] em 2026-10-17.
+> `models/checkpoint.pth` (versionado até ser removido com a pasta) tinha `n_game = 11526`, `record = 120` e rede `11 → 256 → 3`. `models/model.pth` é um `state_dict` puro, do formato antigo. Inspecionado com [[Leitor PTH]] em 2026-10-17.

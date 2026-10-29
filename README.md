@@ -4,7 +4,7 @@ Repositório de experimentos com algoritmos de IA aplicados a jogos. Tem dois su
 
 | Subprojeto | O que faz | Tecnologias |
 |---|---|---|
-| [SnakeGame](SnakeGame/README.md) | Uma IA aprende a jogar Snake por **Aprendizado por Reforço (DQN)** e por **Algoritmo Genético**, com treino local ou em servidor Docker | Python, PyTorch, pygame, OpenCV, Docker |
+| [SnakeGame](SnakeGame/README.md) | Uma IA aprende a jogar Snake por **Aprendizado por Reforço (DQN)** e por **Algoritmo Genético**, com treino em servidor Docker | Python, PyTorch, pygame, OpenCV, Docker |
 | [Sudoku](Sudoku/README.md) | Gera e resolve Sudoku tradicional (NxN) e Samurai com **probabilidade ponderada** e **Backtracking**, comparando os métodos | Python (só biblioteca padrão) |
 
 O ambiente do Snake foi adaptado do repositório [vedantgoswami/SnakeGameAI](https://github.com/vedantgoswami/SnakeGameAI).
@@ -41,9 +41,10 @@ git sparse-checkout set Sudoku
 
 - `leitor_pth.py`: inspeciona um checkpoint PyTorch (camadas, shapes, nº de parâmetros e metadados).
   ```bash
-  python leitor_pth.py SnakeGame/DQN/models/checkpoint.pth
+  python leitor_pth.py SnakeGame/Test/Models/model.pth
   ```
 - `test.py`: experimento de estudo sobre dimensões de tensores.
+- `JogodaVelha/main.py`: estudo de uma rede pequena (2 → 4 → 1) que aprende a porta XOR e mostra o gráfico da perda.
 
 ## 📚 Documentação
 

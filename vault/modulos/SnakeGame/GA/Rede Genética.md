@@ -1,5 +1,8 @@
 # Sobre o Arquivo
 
+> [!warning] Versão local removida em 2026-10-29
+> A pasta `SnakeGame/GA/` foi apagada no commit `0a73702`. O algoritmo descrito aqui continua só na cópia `SnakeGame/Server/Server_GA/GA/`, com as diferenças listadas em [[Server GA]], e essa cópia **não executa** no estado atual. Para ler o código antigo: `git show dfbc504:SnakeGame/GA/<arquivo>`.
+
 O arquivo `model.py` define a `Linear_QNET` do GA: a mesma arquitetura `entrada → 256 → 3` do DQN, adaptada para **manipulação direta dos pesos**.
 # Funcionalidades
 

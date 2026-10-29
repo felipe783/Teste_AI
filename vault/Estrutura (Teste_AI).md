@@ -3,33 +3,20 @@
 ```text
 Teste_AI/
 	📁 SnakeGame
-	|  |--📁 DQN                 ← DQN v1 (pygame + vídeo)
-	|  |  |--📁 models
-	|  |  |  |--checkpoint.pth   ← versionado (11 entradas, recorde 120)
-	|  |  |  |--model.pth        ← state_dict puro (formato antigo)
-	|  |  |--agent.py
-	|  |  |--Helper.py
-	|  |  |--model.py
-	|  |  |--snake_gameai.py
-	|  |--📁 GA                  ← Algoritmo Genético
-	|  |  |--__init__.py
-	|  |  |--agent.py
-	|  |  |--Helper.py
-	|  |  |--model.py
-	|  |  |--snake_gameai.py
-	|  |  |--train_genetic.py
 	|  |--📁 Server              ← versões para Docker
 	|  |  |--📁 Server_DQN
 	|  |  |  |--📁 DQN
 	|  |  |  |  |--agent.py      ← DQN v2 (Double DQN, 21 entradas)
 	|  |  |  |  |--model.py
 	|  |  |  |  |--snake_gameai.py
+	|  |  |  |--📁 tests
+	|  |  |  |  |--test_dqn.py
 	|  |  |  |--Dockerfile
 	|  |  |  |--requirements.txt
 	|  |  |  |--run_docker.sh
 	|  |  |--README.md
 	|  |  |--📁 Server_GA
-	|  |     |--📁 GA
+	|  |     |--📁 GA            ← única cópia do GA (não executa)
 	|  |     |  |--agent.py
 	|  |     |  |--model.py
 	|  |     |  |--snake_gameai.py
@@ -64,6 +51,8 @@ Teste_AI/
 	|  |--main.py
 	|  |--README.md
 	|  |--results.json           ← não versionado (histórico de execuções)
+	📁 JogodaVelha
+	|  |--main.py             ← estudo: rede 2 → 4 → 1 que aprende XOR
 	📁 vault                     ← esta documentação (Obsidian); índice em _Teste_AI
 	|--leitor_pth.py             ← inspeção de checkpoints
 	|--test.py                   ← experimento de shape de tensor 3D
@@ -72,8 +61,7 @@ Teste_AI/
 ```
 ## Pastas
 
-- `SnakeGame/DQN/`: treino DQN local com janela. Ver [[!Modulo DQN]].
-- `SnakeGame/GA/`: treino genético local. Ver [[!Modulo GA]].
+- `SnakeGame/DQN/` e `SnakeGame/GA/`: removidas em 2026-10-29. Ver [[!Modulo DQN]] e [[!Modulo GA]], que ficaram como histórico.
 - `SnakeGame/Server/`: imagens Docker para treino contínuo. Ver [[!Modulo Server]].
 - `SnakeGame/Test/`: execução dos modelos e gravação de vídeos. Ver [[!Modulo Test]].
 - `Sudoku/`: gerador e resolvedor. Ver [[!Modulo Sudoku]].

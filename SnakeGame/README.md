@@ -9,10 +9,8 @@ Uma rede neural aprende a jogar Snake sozinha. A rede `entradas → 256 → 3` o
 
 | Pasta | Conteúdo |
 |---|---|
-| `DQN/` | DQN v1: treino local com janela pygame, gráfico e vídeos (11 entradas) |
-| `GA/` | Treino genético local, headless, com gráfico (15 entradas) |
 | `Server/Server_DQN/` | **DQN v2** para Docker: Double DQN, *target network*, estado de 21 entradas com BFS, *reward shaping*. Ver [Server/README.md](Server/README.md) |
-| `Server/Server_GA/` | Versão do GA para Docker (em ajuste, ainda não executa) |
+| `Server/Server_GA/` | Única versão do GA, para Docker (15 entradas; em ajuste, ainda não executa) |
 | `Test/` | Assiste um modelo treinado jogar e grava em vídeo só as partidas recordistas |
 
 ## 🚀 Como rodar
@@ -26,14 +24,6 @@ pip install -r SnakeGame/requirements.txt
 Os scripts importam os arquivos vizinhos diretamente, então **rode cada um de dentro da sua pasta**:
 
 ```bash
-# Treino DQN v1 (abre a janela do jogo; Ctrl+C salva o checkpoint)
-cd SnakeGame/DQN
-python agent.py
-
-# Treino genético (Ctrl+C salva o melhor indivíduo)
-cd SnakeGame/GA
-python train_genetic.py
-
 # DQN v2 sem Docker: treino e avaliação
 cd SnakeGame/Server/Server_DQN
 python DQN/agent.py
@@ -48,13 +38,12 @@ python play.py
 
 | Script | Saída |
 |---|---|
-| `DQN/agent.py` | `DQN/models/checkpoint.pth`, `videos/*.mp4` |
-| `GA/train_genetic.py` | `GA/Models/best_genetic.pth`, `GA/Models/generation_XXX.pth`, `logs/history.json` |
-| `Server_DQN/DQN/agent.py` | `Models/model.pth`, `logs/training_log.csv` |
+| `Server_DQN/DQN/agent.py` | `Models/model.pth`, `Models/best_model.pth`, `logs/training_log.csv`, `logs/eval_log.csv` |
 | `Test/play.py` | `Test/video/*.mp4`, `Test/logs/testes.json` |
 
 > `Models/`, `logs/`, `*.json` e `*.mp4` estão no `.gitignore`: um clone novo **não traz** os modelos treinados do DQN v2. Copie o `model.pth` do servidor para `Test/Models/` antes de rodar o `play.py`.
 > A opção 2 do `play.py` (modelo genético) ainda não é compatível com a rede do GA.
+> O DQN v1 (`DQN/`) e o GA local (`GA/`) foram removidos em 2026-10-29. O código antigo continua no histórico do Git (`git show dfbc504:SnakeGame/DQN/agent.py`).
 
 ## 📚 Documentação
 

@@ -14,9 +14,9 @@ A IA observa o jogo como um **vetor de estado** (perigos ao redor, direção, po
 A decisão é tomada por uma rede `Linear_QNet` com uma camada oculta de 256 neurônios. Ela é treinada de duas formas:
 
 - **DQN (Deep Q-Network)**: a rede aprende a estimar a recompensa futura de cada ação (valor Q) a partir da experiência acumulada.
-> [[Agente DQN]] (v1, 11 entradas) · [[Server DQN]] (v2, 21 entradas, Double DQN)
+> [[Server DQN]] (v2, 21 entradas, Double DQN) · [[Agente DQN]] (v1, 11 entradas, removido em 2026-10-29)
 - **Algoritmo Genético**: uma população de redes joga, as melhores são selecionadas, cruzadas e mutadas, sem gradiente.
-> [[Agente Genético]] · [[Treino Genético]]
+> [[Agente Genético]] · [[Treino Genético]] · [[Server GA]] (única cópia do código, não executa)
 
 As recompensas base são **+10** ao comer e **−10** ao morrer (colisão ou partida longa demais: `frame_iteration > 100 * len(snake)`). A v2 adiciona *reward shaping*.
 
@@ -37,17 +37,17 @@ Gera um tabuleiro completo por Backtracking randomizado, remove números conform
 5. São calculados quadrantes corretos, cobertura e status.
 6. Ao final, o resumo é exibido e acrescentado em `results.json` ([[Logs Sudoku]]).
 
-## Fluxo Geral — Treino DQN
+## Fluxo Geral — Treino DQN (v2)
 
 1. O agente lê o estado do jogo (`get_state`).
 2. Escolhe a ação: aleatória com probabilidade ε (exploração) ou `argmax` da rede (aproveitamento).
 3. `play_step` executa a ação e devolve `reward, done, score`.
-4. A transição é usada no treino imediato (*short memory*) e guardada no *replay buffer*.
-5. Ao fim da partida, um lote aleatório do buffer treina a rede (*long memory*), e checkpoint/log/vídeo são salvos conforme as regras.
+4. A transição é guardada no *replay buffer*; a cada 4 passos do ambiente, um lote aleatório de 256 treina a rede.
+5. A cada 500 partidas, o modelo é avaliado sem exploração e com sementes fixas; `best_model.pth` só é substituído quando a média melhora. Ver [[Server DQN]].
 
 ## Fluxo Geral — Treino Genético
 
-1. Uma população de 80 agentes (ou clones do melhor checkpoint) é criada.
+1. Uma população de 80 agentes aleatórios é criada; se houver checkpoint, o melhor indivíduo entra na posição 0.
 2. Cada agente joga uma partida headless e recebe `fitness = score² × 100 + passos`.
 3. O melhor da geração é salvo se bater o recorde, e a geração é registrada em `logs/history.json`.
-4. A próxima geração mantém a elite (15%) e completa a população com filhos de torneio + crossover + mutação.
+4. A próxima geração mantém a elite (10%) e completa a população com filhos de torneio + crossover + mutação.

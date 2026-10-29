@@ -17,10 +17,10 @@ Uso:
 
 ````bash
 python leitor_pth.py                                   # padrão: SnakeGame\Test\Models\model.pth
-python leitor_pth.py SnakeGame/DQN/models/checkpoint.pth
+python leitor_pth.py SnakeGame/Test/Models/model10k.pth
 ````
 
 > [!note] Limitações
 > - O caminho padrão usa `\` (estilo Windows) e é relativo à raiz do repositório.
-> - Um `state_dict` puro (como `DQN/models/model.pth`) não tem a chave `model_state_dict`. Nesse caso o script só lista as chaves disponíveis.
+> - Um `state_dict` puro (como o antigo `DQN/models/model.pth`, removido em 2026-10-29) não tem a chave `model_state_dict`. Nesse caso o script só lista as chaves disponíveis.
 > - Usa `weights_only=False`, então só deve abrir checkpoints de origem confiável.

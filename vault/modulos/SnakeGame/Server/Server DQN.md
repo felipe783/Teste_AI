@@ -117,4 +117,4 @@ Condições do A/B: o mesmo ambiente (otimizado; hash idêntico ao original), a 
 1. O A/B cobre só 1 000 partidas e 2 sementes, com ε encurtado. Ele não prova nada sobre o regime de 15k–30k.
 2. Treinar no servidor do zero com o código novo (fazer backup de `Models/` e `logs/` antes) e acompanhar `logs/eval_log.csv` até 30 000 partidas.
 3. Comparar `best_model.pth` com o modelo antigo de 30k: `python DQN/agent.py --eval --episodes 50 --seed 777 --model <antigo> Models/best_model.pth`.
-4. Não alterados: a v1 (`SnakeGame/DQN`) tem o mesmo treino online; a cópia de `snake_gameai.py` em `Test/` não recebeu a otimização do BFS.
+4. Não alterados: a v1 (`SnakeGame/DQN`) tinha o mesmo treino online e foi removida em 2026-10-29; a cópia de `snake_gameai.py` em `Test/` não recebeu a otimização do BFS.

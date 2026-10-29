@@ -2,7 +2,9 @@
 
 Os arquivos de `Server/Server_GA/GA/` são uma **cópia adaptada do [[!Modulo GA|GA]]** para rodar no servidor: sem gráfico e com população inicial sempre aleatória.
 
-Diferenças em relação a `SnakeGame/GA/`:
+Desde 2026-10-29 esta é a **única cópia** do GA: a versão local `SnakeGame/GA/`, descrita nas notas do [[!Modulo GA]], foi removida.
+
+Diferenças em relação à antiga `SnakeGame/GA/`:
 - Sem `Helper.plot` (headless).
 - `ELITE_FRACTION = 0.10` (8 elites, em vez de 12).
 - População inicial sempre `Agent()` novo; o checkpoint carregado entra só na posição `0`.

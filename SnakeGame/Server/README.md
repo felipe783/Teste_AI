@@ -5,7 +5,7 @@ Versões do treino **sem interface gráfica**, empacotadas em Docker para rodar 
 | Pasta | Algoritmo | Estado |
 |---|---|---|
 | `Server_DQN/` | **DQN v2**: Double DQN, *target network* (atualizada a cada 1 000 passos), Huber loss, gradient clipping, ε linear de 1.0 a 0.02, estado de 21 entradas com análise de espaço livre por BFS | Funcional |
-| `Server_GA/` | Algoritmo Genético (cópia adaptada de `../GA`) | **Não executa ainda**: imports, `CMD` do Dockerfile e volumes precisam de ajuste |
+| `Server_GA/` | Algoritmo Genético (única cópia; a versão local `../GA` foi removida em 2026-10-29) | **Não executa ainda**: imports, `CMD` do Dockerfile e volumes precisam de ajuste |
 
 ## 🚀 Como rodar
 

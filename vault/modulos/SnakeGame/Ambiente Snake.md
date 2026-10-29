@@ -22,12 +22,11 @@ idx = clock_wise.index(self.direction)
 
 - Tabuleiro: 640x480 px, `BLOCK_SIZE = 20` → grade 32x24 = 768 células.
 
-# As Quatro Versões
+# As Três Versões
 
 | Arquivo | Interface | Extras | Usado por |
 |---|---|---|---|
-| `DQN/snake_gameai.py` | pygame, `SPEED = 60` | Captura de frames e `save_video` (OpenCV) | [[Agente DQN]] |
-| `GA/snake_gameai.py` (= `Server_GA/GA/`) | Headless | — | [[Agente Genético]] |
+| `Server_GA/GA/snake_gameai.py` | Headless | — | [[Agente Genético]] |
 | `Server_DQN/DQN/snake_gameai.py` | Headless | `action_analysis` (BFS), comida só em células livres, *reward shaping* | [[Server DQN]] |
 | `Test/snake_gameai.py` | pygame, `SPEED = 40` | Mesma lógica do Server DQN + desenho | [[Play]] |
 
@@ -47,4 +46,4 @@ reward = -0.01 + 0.10 * progress + 0.05 * (new_space - old_space)
 - `+0.05 × Δespaço` recompensa manter área livre, para evitar se encurralar.
 
 > [!note] Duplicação e memória
-> As quatro versões divergiram por cópia. Na versão DQN, `capture_frame()` acumula **todos** os frames da partida em `video_frames`, mesmo quando o vídeo não é salvo, e `_update_ui()` é chamado duas vezes por passo.
+> As versões divergiram por cópia. Até 2026-10-29 havia mais duas: `DQN/snake_gameai.py` (v1, com pygame e captura de vídeo) e `GA/snake_gameai.py` (igual à de `Server_GA`), removidas junto com as pastas.
