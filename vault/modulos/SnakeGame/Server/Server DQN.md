@@ -75,10 +75,11 @@ python DQN/agent.py --eval --episodes 50 --model Models/m15k.pth Models/m30k.pth
 python DQN/agent.py --games 15000 --seed 0                                           # treino com orçamento e semente
 ````
 
-Roda sem exploração (`explore=False`). A partida *i* usa `random.seed(seed + i)` (padrão `EVAL_SEED = 12345`), então todos os modelos enfrentam a mesma sequência de comidas e, como a política gulosa é determinística, o resultado de um checkpoint é reprodutível. Imprime média ± IC95%, mediana, mínimo e máximo; com dois modelos, imprime a **diferença pareada** por partida e se ela é significativa.
+Roda sem exploração (`explore=False`). A partida *i* usa `random.seed(seed + i)` (padrão `EVAL_SEED = 12345`), então todos os modelos partem da mesma sequência aleatória e, como a política gulosa é determinística, o resultado de um checkpoint é reprodutível. As comidas só coincidem no começo: o sorteio depende das células livres, e em 2026-11-03 dois modelos divergiram na 7ª comida (DQN-04 da [[Auditoria Snake DQN 2026-11-03]]). Imprime média ± IC95%, mediana, mínimo e máximo; com dois modelos, imprime a **diferença pareada** por partida e se ela é significativa.
 
 > [!note] Modelo treinado
-> `Test/Models/model.pth` (não versionado) tem `n_game = 14500`, `record = 101` e `train_steps = 7 591 701`; `model_antigo.pth` tem 6 400 partidas e recorde 90. Inspecionados em 2026-10-17.
+> Em 2026-11-03, `Test/Models/model.pth` (não versionado) tinha `n_game = 62200`, `record = 122`, `train_steps = 10 562 997`, `train_every_steps = 4` e `best_eval_mean = 109,15`, ou seja, um treino longo já com o código de 2026-10-17. Também estavam lá `model10k.pth` (8 400 partidas), `model30k.pth` (37 000) e os antigos `model15k/20K/25k/30k/35K-Antigo.pth`. Avaliação pareada com 40 partidas e `--seed 777`: `model.pth` 101,0 ± 10,3 · `model30k.pth` 101,5 ± 9,0 · `model10k.pth` 83,2 ± 8,9 · `model30k-Antigo.pth` 81,6 ± 10,2 (platô desde ~37 000 partidas). Ver [[Auditoria Snake DQN 2026-11-03]].
+> Em 2026-10-17 o mesmo arquivo tinha 14 500 partidas; o `model_antigo.pth` de 6 400 partidas citado abaixo não está mais nesta máquina (o `Server_DQN/Models/model_antigo.pth` local é um `state_dict` de 11 entradas, da v1).
 
 # Regressão 15k × 30k (2026-10-17)
 
@@ -115,6 +116,6 @@ Condições do A/B: o mesmo ambiente (otimizado; hash idêntico ao original), a 
 ## Limitações e próximos passos
 
 1. O A/B cobre só 1 000 partidas e 2 sementes, com ε encurtado. Ele não prova nada sobre o regime de 15k–30k.
-2. Treinar no servidor do zero com o código novo (fazer backup de `Models/` e `logs/` antes) e acompanhar `logs/eval_log.csv` até 30 000 partidas.
+2. Treinar no servidor do zero com o código novo (fazer backup de `Models/` e `logs/` antes) e acompanhar `logs/eval_log.csv` até 30 000 partidas. **Feito** (passou de 62 000); o `eval_log.csv` ficou no servidor. A avaliação local de 2026-11-03 mostra platô em ~101 pontos desde ~37 000 partidas e que o código novo supera o modelo antigo de 30k em +19,4 ± 14,5 ([[Auditoria Snake DQN 2026-11-03]]).
 3. Comparar `best_model.pth` com o modelo antigo de 30k: `python DQN/agent.py --eval --episodes 50 --seed 777 --model <antigo> Models/best_model.pth`.
 4. Não alterados: a v1 (`SnakeGame/DQN`) tinha o mesmo treino online e foi removida em 2026-10-29; a cópia de `snake_gameai.py` em `Test/` não recebeu a otimização do BFS.

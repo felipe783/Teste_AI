@@ -20,6 +20,7 @@ O índice abaixo é carregado em toda sessão. As notas detalhadas ficam em `vau
 | GA (fitness, crossover, mutação auto-adaptativa; código em `Server_GA/GA/`) | `vault/modulos/SnakeGame/GA/` |
 | Docker e Server GA quebrado | `vault/modulos/SnakeGame/Server/Docker.md`, `Server GA.md` |
 | Teste visual e gravação de recordes | `vault/modulos/SnakeGame/Test/Play.md` |
+| Auditoria do DQN v2 (problemas `DQN-NN`, limitações, roadmap) | `vault/Auditorias/Auditoria Snake DQN 2026-11-03.md` |
 | Sudoku: fluxo, geradores, resolvedores, Samurai, logs | `vault/modulos/Sudoku/` |
 
 Conceitos transversais (avaliação de modelos, caminhos, Docker, testes…), com aprendizados deste e de outros projetos: `../Contexto-Projetos/Conhecimento/_Conhecimento.md`. Leia sob demanda, quando a tarefa tocar o assunto.

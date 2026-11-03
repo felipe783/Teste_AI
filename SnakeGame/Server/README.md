@@ -54,4 +54,4 @@ Copie `Models/model.pth` do servidor para `SnakeGame/Test/Models/` e rode `pytho
 
 ## 📚 Documentação
 
-A documentação completa do projeto está em [`vault/_Teste_AI.md`](../../vault/_Teste_AI.md). Comece por esse arquivo para consultar a arquitetura, os algoritmos, as decisões técnicas, os problemas conhecidos e os próximos passos. Os detalhes do servidor estão em [`vault/modulos/SnakeGame/Server/`](<../../vault/modulos/SnakeGame/Server/!Modulo Server.md>).
+A documentação completa do projeto está em [`vault/_Teste_AI.md`](../../vault/_Teste_AI.md). Comece por esse arquivo para consultar a arquitetura, os algoritmos, as decisões técnicas, os problemas conhecidos e os próximos passos. Os detalhes do servidor estão em [`vault/modulos/SnakeGame/Server/`](<../../vault/modulos/SnakeGame/Server/!Modulo Server.md>). A auditoria técnica do DQN v2 (problemas conhecidos, limitações e roadmap) está em [`vault/Auditorias/Auditoria Snake DQN 2026-11-03.md`](<../../vault/Auditorias/Auditoria Snake DQN 2026-11-03.md>).

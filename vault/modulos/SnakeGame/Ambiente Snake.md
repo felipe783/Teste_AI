@@ -45,5 +45,8 @@ reward = -0.01 + 0.10 * progress + 0.05 * (new_space - old_space)
 - `+0.10 × progresso` recompensa aproximar-se da comida (distância Manhattan).
 - `+0.05 × Δespaço` recompensa manter área livre, para evitar se encurralar.
 
+> [!warning] Efeito medido (2026-11-03)
+> Como cada movimento muda a distância Manhattan em exatamente 1, o termo de progresso vale sempre ±0,10. O termo de espaço tem mediana 0 e passa de 0,01 em só 0,3% dos passos: na prática, a intenção de "manter área livre" não chega ao agente. Além disso, com γ = 0,95 a forma `Φ(s') − Φ(s)` não é exatamente *potential-based* (seria `γΦ(s') − Φ(s)`). Ver DQN-05 e L2 em [[Auditoria Snake DQN 2026-11-03]].
+
 > [!note] Duplicação e memória
 > As versões divergiram por cópia. Até 2026-10-29 havia mais duas: `DQN/snake_gameai.py` (v1, com pygame e captura de vídeo) e `GA/snake_gameai.py` (igual à de `Server_GA`), removidas junto com as pastas.

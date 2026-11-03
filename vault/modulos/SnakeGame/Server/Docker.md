@@ -30,7 +30,7 @@ CMD ["python", "DQN/agent.py"]
 
 6. `docker start` e instruções para acompanhar com `docker logs -f Snake_DQN`.
 
-No DQN, `MODEL_DIR = "Models"` e `LOG_DIR = "logs"` são relativos ao `WORKDIR`, então caem exatamente nos volumes, e o treino continua de onde parou após recriar o container.
+No DQN, `MODEL_DIR = "Models"` e `LOG_DIR = "logs"` são relativos ao `WORKDIR`, então caem exatamente nos volumes, e o treino continua de onde parou após recriar o container: pesos, otimizador, contadores e ε. O replay buffer **não** é salvo e recomeça vazio (DQN-06), e um `model.pth` truncado derruba o treino, que o `--restart unless-stopped` reinicia em loop (DQN-02). Ver [[Auditoria Snake DQN 2026-11-03]].
 
 > [!warning] Versão GA
 > - `CMD ["python", "DQN/agent.py"]` deveria ser `GA/train_genetic.py`.
