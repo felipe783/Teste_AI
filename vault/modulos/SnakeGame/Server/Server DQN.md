@@ -12,6 +12,8 @@ Os arquivos de `Server/Server_DQN/DQN/` formam o **DQN v2**: reescrita do [[Agen
 | ε              | `max(5, 80 − partidas)/201`                         | linear de **1.0 → 0.02** em 250 000 passos do ambiente (62 500 passos de treino)                             |
 | Target network | —                                                   | atualizada a cada **1 000** passos do ambiente (250 passos de treino)                                        |
 | Treino         | lote 1 a cada passo + lote 1 000 a cada 10 partidas | **lote 256 do replay a cada 4 passos** (desde 2026-10-17; antes: lote 1 a cada passo + lote 256 por partida) |
+
+Desde 2026-11-05 todos os valores acima são **padrões** de um `Config` (dataclass em `agent.py`) e podem ser mudados pela CLI (`python DQN/agent.py --help`) sem editar o código. A execução também ganhou `--n-step` (retornos de n passos, padrão 1) e `--safe-explore` (exploração só entre ações que não colidem, desligada). Cada execução tem um `--run-dir` com `config.json`, `Models/` e `logs/`; ao retomar, o que não for passado na CLI vem do `config.json`. Ver [[Correções Snake DQN 2026-11-05]].
 # Funcionalidades
 
 ## get_state (21 entradas)
@@ -59,13 +61,16 @@ torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=10.0)
 - **Double DQN**: separar quem escolhe a ação de quem a avalia reduz a superestimação de Q.
 - **Huber + gradient clipping**: limitam o efeito de erros grandes.
 
-## Checkpoint e Log
+## Checkpoint e Log (desde 2026-11-05)
 
-- `Models/model.pth` (relativo ao diretório atual): **último** estado — pesos, *target*, otimizador, `n_game`, `record`, `train_steps`, `best_eval_mean`, `train_every_steps`, `checkpoint_version = 2`, `state_size`. É salvo a cada 100 partidas, a cada novo recorde e no `Ctrl+C`.
-- `Models/best_model.pth`: **melhor** modelo pela avaliação gulosa (ver [[#Regressão 15k × 30k (2026-10-17)]]). Só é sobrescrito quando a média melhora; `best_eval_mean` vai junto no `model.pth` para que uma retomada não rebaixe o melhor.
-- `logs/eval_log.csv`: `partida, media, mediana, min, max, melhor_media, loss_media` a cada avaliação.
-- `load_checkpoint` aceita o formato antigo e **recusa** checkpoints com número de entradas diferente, iniciando uma rede nova em vez de misturar representações.
-- `TrainingLogger` grava `logs/training_log.csv` (`partida, score, max, epsilon`) e **apaga** o arquivo ao passar de 5 GB.
+Caminhos relativos ao `--run-dir` (padrão `.`, o layout antigo):
+- `Models/model.pth`: **último** estado. Leva pesos, *target*, otimizador, `n_game`, `record`, `train_steps`, `env_steps`, `train_seconds`, `best_eval_mean`, `eval_protocol`, `config`, `git_commit`, `saved_at` e `checkpoint_version = 3`. É salvo a cada 100 partidas **ou** 10 minutos, a cada recorde e na parada (`SIGTERM` ou `Ctrl+C`).
+- Gravação **atômica** (`.tmp` → `fsync` → `os.replace`), com a versão anterior em `*.bak`. Ao retomar, um arquivo ilegível cai no `.bak`; sem `.bak` válido, ou com outro `STATE_SIZE`, o treino **para com código 2 sem sobrescrever nada** (antes recomeçava do zero em silêncio).
+- `Models/best_model.pth`: **melhor** modelo pela avaliação gulosa (ver [[#Regressão 15k × 30k (2026-10-17)]]). O `best_eval_mean` de referência é lido **do próprio arquivo** ao iniciar, não do `model.pth` (DQN-01); se ele foi medido com outro protocolo (nº de partidas ou semente), é reavaliado.
+- `Models/replay.npz`: replay buffer (~18 MB com 100 mil transições), salvo nos checkpoints periódicos. Sem ele, a retomada coleta 20 000 transições antes de treinar.
+- `logs/eval_log.csv`: `partida, media, ic95, mediana, min, max, melhor_media, loss_media, epsilon, train_steps, passos_ambiente, horas_treino, passos_por_s`. Um CSV com o cabeçalho antigo é arquivado.
+- `TrainingLogger` grava `logs/training_log.csv` (`partida, score, max, epsilon`) e **rotaciona** (renomeia) o arquivo aos 256 MB.
+- O `training_log.csv` subestima o agente: com ε = 0,02, o modelo de 62 200 partidas faz ~31 pontos, contra ~101 guloso, porque as ações aleatórias matam a cobra longa. Use o `eval_log.csv` para acompanhar.
 
 ## Avaliação
 
@@ -75,7 +80,10 @@ python DQN/agent.py --eval --episodes 50 --model Models/m15k.pth Models/m30k.pth
 python DQN/agent.py --games 15000 --seed 0                                           # treino com orçamento e semente
 ````
 
-Roda sem exploração (`explore=False`). A partida *i* usa `random.seed(seed + i)` (padrão `EVAL_SEED = 12345`), então todos os modelos partem da mesma sequência aleatória e, como a política gulosa é determinística, o resultado de um checkpoint é reprodutível. As comidas só coincidem no começo: o sorteio depende das células livres, e em 2026-11-03 dois modelos divergiram na 7ª comida (DQN-04 da [[Auditoria Snake DQN 2026-11-03]]). Imprime média ± IC95%, mediana, mínimo e máximo; com dois modelos, imprime a **diferença pareada** por partida e se ela é significativa.
+Roda sem exploração (`explore=False`). A avaliação de seleção do treino usa 50 partidas desde 2026-11-05 (antes 20, IC ±13). A partida *i* usa `random.seed(seed + i)` (padrão `eval_seed = 12345`), então todos os modelos partem da mesma sequência aleatória e, como a política gulosa é determinística, o resultado de um checkpoint é reprodutível. As comidas só coincidem no começo: o sorteio depende das células livres, e em 2026-11-03 dois modelos divergiram na 7ª comida (DQN-04 da [[Auditoria Snake DQN 2026-11-03]]). Imprime média ± IC95%, mediana, mínimo e máximo; com dois modelos, imprime a **diferença pareada** por partida e se ela é significativa.
+
+> [!note] Desempenho
+> Em 2026-11-05 o ambiente passou a usar BFS em grade de inteiros com cache (5 → 3 BFS por passo), e o replay virou arrays NumPy: o treino foi de 528 para **2 395 passos/s** (1 thread), com placares idênticos ao código antigo no mesmo modelo. Para treinar em paralelo, rode vários processos de 1 thread ([[Treino na AWS]]).
 
 > [!note] Modelo treinado
 > Em 2026-11-03, `Test/Models/model.pth` (não versionado) tinha `n_game = 62200`, `record = 122`, `train_steps = 10 562 997`, `train_every_steps = 4` e `best_eval_mean = 109,15`, ou seja, um treino longo já com o código de 2026-10-17. Também estavam lá `model10k.pth` (8 400 partidas), `model30k.pth` (37 000) e os antigos `model15k/20K/25k/30k/35K-Antigo.pth`. Avaliação pareada com 40 partidas e `--seed 777`: `model.pth` 101,0 ± 10,3 · `model30k.pth` 101,5 ± 9,0 · `model10k.pth` 83,2 ± 8,9 · `model30k-Antigo.pth` 81,6 ± 10,2 (platô desde ~37 000 partidas). Ver [[Auditoria Snake DQN 2026-11-03]].

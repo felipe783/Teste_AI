@@ -14,3 +14,4 @@ No Teste_AI:
 - [[Server DQN]]: **DQN v2**, a versão mais avançada do agente. Funciona.
 - [[Server GA]]: cópia adaptada do GA. **Não funciona** no estado atual.
 - [[Docker]]: `Dockerfile` e `run_docker.sh` das duas.
+- [[Treino na AWS]]: requisitos medidos, instância EC2 recomendada, custos e scripts de `Server_DQN/aws/`.

@@ -21,15 +21,17 @@ O índice abaixo é carregado em toda sessão. As notas detalhadas ficam em `vau
 | Docker e Server GA quebrado | `vault/modulos/SnakeGame/Server/Docker.md`, `Server GA.md` |
 | Teste visual e gravação de recordes | `vault/modulos/SnakeGame/Test/Play.md` |
 | Auditoria do DQN v2 (problemas `DQN-NN`, limitações, roadmap) | `vault/Auditorias/Auditoria Snake DQN 2026-11-03.md` |
+| Correções de 2026-11-05 (checkpoint atômico, `Config`, replay salvo, desempenho) | `vault/Auditorias/Correções Snake DQN 2026-11-05.md` |
+| Treino na AWS (instância, custos, `Server_DQN/aws/`) | `vault/modulos/SnakeGame/Server/Treino na AWS.md` |
 | Sudoku: fluxo, geradores, resolvedores, Samurai, logs | `vault/modulos/Sudoku/` |
 
 Conceitos transversais (avaliação de modelos, caminhos, Docker, testes…), com aprendizados deste e de outros projetos: `../Contexto-Projetos/Conhecimento/_Conhecimento.md`. Leia sob demanda, quando a tarefa tocar o assunto.
 
 ## Mapa do código
 
-- `SnakeGame/Server/Server_DQN/`: **DQN v2**, a versão mais avançada; `Dockerfile` + `run_docker.sh`.
+- `SnakeGame/Server/Server_DQN/`: **DQN v2**, a versão mais avançada; `Dockerfile` + `run_docker.sh`; `aws/` com os scripts para EC2.
 - `SnakeGame/Server/Server_GA/`: única cópia do GA, para Docker (**não executa**). `GA/train_genetic.py` (população 80, elite 10%, torneio 5), `GA/agent.py` (estado de 15 entradas, fitness `score² × 100 + passos`), `GA/model.py` (pesos como genoma).
-- `SnakeGame/Test/`: `play.py` carrega `Models/model.pth` (DQN v2, 21 entradas) e grava só as partidas recordistas.
+- `SnakeGame/Test/`: `play.py` carrega `Models/best_model.pth` (ou `model.pth`, se não houver; DQN v2, 21 entradas) e grava só as partidas recordistas.
 - `Sudoku/`: `main.py` (menus e métricas), `Sudoku/src/` (regras, geração, resolvedores, logs), `Sudoku/src/SamuraiGame/`, `Sudoku/core/config.py` (posições dos 9 tabuleiros).
 - Raiz: `leitor_pth.py` (inspeciona checkpoints), `test.py` (estudo de tensores), `JogodaVelha/main.py` (apesar do nome, rede 2 → 4 → 1 que aprende XOR).
 
@@ -52,14 +54,15 @@ Para testar o Sudoku sem interação, use uma **cópia fora do repositório**, p
 printf '1\n9\n2\n3\n3\n' | PYTHONIOENCODING=utf-8 python main.py   # tradicional 9x9, 2 jogos, difícil, backtracking
 ```
 
-**Peça autorização antes de instalar pacotes.** O que a `.venv` tinha na última verificação está no "Como rodar" do índice. Só o DQN v2 tem testes: `cd SnakeGame\Server\Server_DQN; python -m unittest discover -s tests -v` (~1 min; rodam em diretório temporário).
+**Peça autorização antes de instalar pacotes.** O que a `.venv` tinha na última verificação está no "Como rodar" do índice. Só o DQN v2 tem testes: `cd SnakeGame\Server\Server_DQN; python -m unittest discover -s tests -v` (21 testes, ~10 s; rodam em diretório temporário, e um deles envia SIGTERM ao próprio processo).
 
 ## Regras deste projeto
 
 - **Não inicie treinos** (`Server_DQN/DQN/agent.py` sem `--eval`, `Server_GA/GA/train_genetic.py`) sem pedir. Eles rodam indefinidamente e **sobrescrevem checkpoints**.
 - **Nunca sobrescreva modelos treinados** (`Test/Models/*.pth`, `Server_DQN/Models/*.pth`). Ao avaliar, prefira `--eval` ou o `leitor_pth.py`.
 - Saídas usam **caminhos relativos ao diretório atual** (`videos/`, `logs/`, `Models/`, `results.json`). Rodar da pasta errada espalha arquivos pelo repositório.
-- **Compatibilidade de checkpoint = número de entradas**: GA tem 15, v2/Test têm 21 (a v1 removida tinha 11). Ao mudar `get_state`, mude `STATE_SIZE` e documente: o `load_checkpoint` do v2 recusa tamanhos diferentes e começa uma rede nova.
+- **Compatibilidade de checkpoint = número de entradas**: GA tem 15, v2/Test têm 21 (a v1 removida tinha 11). Ao mudar `get_state`, mude `STATE_SIZE` e documente. O treino do v2 **para com código 2** diante de um `model.pth` de outro tamanho ou ilegível sem `.bak`, sem sobrescrever nada: use outro `--run-dir` ou mova o arquivo.
+- Experimentos do DQN v2: use `--run-dir runs/<nome>` (ignorado pelo Git) e hiperparâmetros pela CLI (`python DQN/agent.py --help`), não editando constantes. Cada execução de treino é **1 processo de 1 thread**: para paralelizar, rode vários processos.
 - **Código duplicado por cópia**: 3 variações de `snake_gameai.py` (`Server_DQN/DQN/`, `Server_GA/GA/`, `Test/`). Ao corrigir algo, diga quais cópias ficaram de fora em vez de supor que a correção vale para todas.
 - Sudoku é **só biblioteca padrão**: não introduza dependências.
 - No Sudoku, os resolvedores retornam formatos diferentes (`(board, bool)`, `(board, n, bool)`, `(board, True)` ou `False`). Verifique o tipo antes de usar o resultado.

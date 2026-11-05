@@ -38,7 +38,7 @@ python play.py
 
 | Script | Saída |
 |---|---|
-| `Server_DQN/DQN/agent.py` | `Models/model.pth`, `Models/best_model.pth`, `logs/training_log.csv`, `logs/eval_log.csv` |
+| `Server_DQN/DQN/agent.py` | dentro do `--run-dir` (padrão `.`): `Models/model.pth`, `Models/best_model.pth`, `Models/replay.npz` (com cópias `.bak`), `logs/training_log.csv`, `logs/eval_log.csv`, `config.json` |
 | `Test/play.py` | `Test/video/*.mp4`, `Test/logs/testes.json` |
 
 > `Models/`, `logs/`, `*.json` e `*.mp4` estão no `.gitignore`: um clone novo **não traz** os modelos treinados do DQN v2. Copie o `model.pth` do servidor para `Test/Models/` antes de rodar o `play.py`.

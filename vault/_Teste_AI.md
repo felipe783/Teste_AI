@@ -10,7 +10,7 @@ Stack:
   - Docker
 Codigo: "Teste_AI"
 Repositorio: "https://github.com/felipe783/Teste_AI"
-Atualizado: 2026-11-03
+Atualizado: 2026-11-05
 ---
 # Teste_AI
 
@@ -38,8 +38,10 @@ Repositório de **experimentos com algoritmos de IA aplicados a jogos**. Reúne 
 | Snake GA em servidor Docker ([[TA-RF 07]]) | Quebrado — imports, `CMD` e volumes incorretos |
 | Teste dos modelos com gravação de recordes ([[TA-RF 08]]) | Implementado para o DQN v2; opção do GA incompatível |
 | Snake DQN v2: melhor modelo por avaliação com sementes fixas e comparação pareada | Implementado em 2026-10-17 (`best_model.pth`, `eval_log.csv`, `--eval --model A B`) |
-| Testes automatizados | Só DQN v2: `SnakeGame/Server/Server_DQN/tests/test_dqn.py` (6 testes, `unittest`) |
+| Testes automatizados | Só DQN v2: `SnakeGame/Server/Server_DQN/tests/test_dqn.py` (21 testes, `unittest`, ~10 s) |
 | Snake DQN v2: auditoria técnica ([[Auditoria Snake DQN 2026-11-03]]) | Feita em 2026-11-03: algoritmo correto, platô em ~100 pontos desde ~37 000 partidas, 2 problemas críticos de checkpoint |
+| Snake DQN v2: correções da auditoria ([[Correções Snake DQN 2026-11-05]]) | Feitas em 2026-11-05: checkpoint atômico com `.bak`, `best_model` protegido, replay salvo, parada limpa por SIGTERM, `Config` na CLI com `--run-dir`, treino 4,5× mais rápido, mesma política |
+| Snake DQN v2 na AWS ([[Treino na AWS]]) | Preparado e testado localmente (Docker e `aws/*.sh`); nenhuma instância criada. Recomendação: c7g.xlarge on-demand |
 
 ## Como rodar
 
@@ -53,15 +55,21 @@ pip install -r SnakeGame/requirements.txt
 cd Sudoku && python main.py
 
 # Snake — os scripts usam imports "soltos": rode de dentro da pasta
-cd SnakeGame/Server/Server_DQN && python DQN/agent.py           # DQN v2 sem Docker
+cd SnakeGame/Server/Server_DQN && python DQN/agent.py           # DQN v2 sem Docker (retoma ./Models)
+cd SnakeGame/Server/Server_DQN && python DQN/agent.py --run-dir runs/x --seed 1 --games 40000 --gamma 0.99   # execução isolada
+cd SnakeGame/Server/Server_DQN && python DQN/agent.py --help    # todos os hiperparâmetros
 cd SnakeGame/Server/Server_DQN && python DQN/agent.py --eval    # avaliação, 100 partidas
 cd SnakeGame/Server/Server_DQN && python DQN/agent.py --eval --episodes 50 --model A.pth B.pth   # comparação pareada
 cd SnakeGame/Server/Server_DQN && python -m unittest discover -s tests -v                         # testes do DQN v2
 cd SnakeGame/Test && python play.py              # assistir o modelo jogar e gravar recordes
 
 # Servidor (Linux com Docker)
-bash SnakeGame/Server/Server_DQN/run_docker.sh
+bash SnakeGame/Server/Server_DQN/run_docker.sh                 # variáveis BASE_DIR, CONTAINER_NAME, RESTART_POLICY
 docker logs -f Snake_DQN
+docker stop -t 120 Snake_DQN                                   # salva antes de sair
+
+# AWS (dentro da EC2): ver [[Treino na AWS]]
+bash SnakeGame/Server/Server_DQN/aws/benchmark.sh && AUTO_SHUTDOWN=1 bash SnakeGame/Server/Server_DQN/aws/experiments.sh
 ```
 
 > `Models/`, `models/`, `logs/`, `*.json` e `*.mp4` estão no `.gitignore`: um clone novo não traz modelos treinados (os únicos versionados eram os da v1, removidos em 2026-10-29).
@@ -79,10 +87,10 @@ docker logs -f Snake_DQN
   - [[!Modulo SnakeGame]]: [[Ambiente Snake]] (as 3 versões do jogo).
     - [[!Modulo DQN]] (v1, código removido; notas históricas): [[Agente DQN]], [[Rede e QTrainer]].
     - [[!Modulo GA]] (código só em `Server_GA`): [[Agente Genético]], [[Rede Genética]], [[Treino Genético]].
-    - [[!Modulo Server]]: [[Server DQN]], [[Server GA]], [[Docker]].
+    - [[!Modulo Server]]: [[Server DQN]], [[Server GA]], [[Docker]], [[Treino na AWS]].
     - [[!Modulo Test]]: [[Play]].
   - [[!Modulo Ferramentas]]: [[Leitor PTH]].
-- Auditorias (`vault/Auditorias/`, relatórios históricos: não reescreva, marque o andamento aqui no índice): [[Auditoria Snake DQN 2026-11-03]].
+- Auditorias (`vault/Auditorias/`, relatórios históricos: não reescreva, marque o andamento aqui no índice): [[Auditoria Snake DQN 2026-11-03]] · [[Correções Snake DQN 2026-11-05]].
 
 ## Problemas conhecidos
 
@@ -94,20 +102,18 @@ Encontrados lendo o código em 2026-10-17. Os itens marcados com ✅ foram **con
 - Sudoku: a cobertura usa `/ 9` fixo; com `SIZE = 16` passaria de 100%.
 - Server GA não sobe: os imports usam `Teste_AI.SnakeGame.Server.GA_Server...` (pasta inexistente), o `Dockerfile` roda `DQN/agent.py`, os volumes apontam para `/Treinamento_DQN` e o `run_docker.sh` tem texto solto em `docker start ... Inicia o Container`. Ver [[Server GA]] e [[Docker]].
 - `Test/play.py`, opção 2: carrega `best_genetic.pth` (15 entradas) numa rede de 21 entradas, e o arquivo nem existe em `Test/Models`. Ver [[Play]].
-- `Test/play.py` num clone novo: `carregar_testes()` retorna `[]` quando `logs/testes.json` não existe, e `obter_recorde_anterior()` chama `.values()` nessa lista (`AttributeError`).
 - Os caminhos relativos ao diretório atual (`videos/`, `logs/`, `results.json`, `Models/`) exigem rodar cada script de dentro da sua pasta.
 - Código duplicado: três variações de `snake_gameai.py` (`Server_DQN/DQN/`, `Server_GA/GA/`, `Test/`).
 
-Da [[Auditoria Snake DQN 2026-11-03]] (os códigos `DQN-NN` são os da auditoria; ✅ = reproduzido executando):
-- ✅ **DQN-01 (crítico):** sem `Models/model.pth` (ou com `STATE_SIZE` diferente), o treino começa com `best_eval_mean = -1` e a primeira avaliação **sobrescreve o `best_model.pth`** com uma rede nova.
-- ✅ **DQN-02 (crítico):** `model.pth` truncado gera `IndexError`, que o `load_checkpoint` não captura; o treino cai e o `--restart unless-stopped` o reinicia em loop. O `torch.save` não é atômico.
-- ✅ **DQN-03:** a seleção usa só 20 partidas (IC95% ±13) sempre nas mesmas sementes; o `best_eval_mean` gravado (109,15) superestima o modelo (101,0 em sementes não usadas na seleção).
-- ✅ **DQN-04:** a mesma semente só garante as primeiras ~6 comidas entre modelos diferentes; a comparação continua pareada, mas não "remove a sorte da comida".
+Da [[Auditoria Snake DQN 2026-11-03]] (os códigos `DQN-NN` são os da auditoria; ✅ = reproduzido executando). **Resolvidos em 2026-11-05** ([[Correções Snake DQN 2026-11-05]], com testes): DQN-01, DQN-02, DQN-06, DQN-08, DQN-09 (vitória, BFS desperdiçada, torch CPU, threads, log apagado) e o texto do DQN-04. Abertos:
+- **DQN-03 (parcial):** a seleção agora usa 50 partidas com IC no `eval_log.csv` (antes 20), mas sempre nas mesmas sementes 12345+i; o resultado final precisa ser medido com `--eval --seed 777`.
+- ✅ **DQN-04:** a mesma semente só garante as primeiras ~6 comidas entre modelos diferentes (a comparação continua pareada; o texto do código foi corrigido).
 - ✅ **DQN-05:** o termo `0,05 × Δespaço` da recompensa é praticamente nulo (mediana 0); quem decide é o ±0,10 da distância.
-- **DQN-06:** retomar o treino perde o replay buffer (não é salvo).
-- **DQN-07:** `Test/play.py` carrega o último checkpoint (`model.pth`), não o `best_model.pth`, e tem uma 4ª cópia do `get_state`.
-- **DQN-08:** hiperparâmetros, semente e commit não ficam no checkpoint; os nomes dos `.pth` não batem com o conteúdo (`model30k.pth` tem 37 000 partidas).
-- ✅ **Platô:** `model30k.pth` (37 000 partidas) e `model.pth` (62 200) empatam em ~101 pontos (diferença −0,6 ± 10,4).
+- **DQN-07 (parcial):** `Test/play.py` agora carrega o `best_model.pth` quando ele existe, mas continua com uma 4ª cópia do `get_state` e com o BFS antigo.
+- ✅ **Platô:** `model30k.pth` (37 000 partidas) e `model.pth` (62 200) empatam em ~101 pontos (diferença −0,6 ± 10,4). Causa provável nova, de 2026-11-05: com ε = 0,02 o modelo faz 30,8 ± 5,8, contra 101,0 guloso, e 79,4 com `--safe-explore`; o treino quase não vê a fase longa. Experimentos prontos (`--safe-explore`, `--gamma`, `--n-step`), **não executados em escala**.
+- **DQN-09 (timeout):** `frame_iteration` é cumulativo e o truncamento é tratado como término (0 de 180 mortes por timeout; sem efeito medido).
+- **Graviton (arm64):** a imagem Docker só foi construída e testada em x86_64.
+- Um `model.pth` corrompido sem `.bak`, ou de outro `STATE_SIZE`, agora **para** o treino (código 2) em vez de recomeçar: mova o arquivo para começar do zero.
 
 ## Decisões
 
@@ -119,17 +125,17 @@ Da [[Auditoria Snake DQN 2026-11-03]] (os códigos `DQN-NN` são os da auditoria
 
 ## Próximos passos sugeridos
 
-Roadmap completo do DQN (17 itens, com classificação) na seção 10 da [[Auditoria Snake DQN 2026-11-03]]. Os primeiros:
-- Proteger o `best_model.pth` (DQN-01) e tornar o checkpoint atômico (DQN-02) **antes** de qualquer treino novo.
+Roadmap completo do DQN (17 itens, com classificação) na seção 10 da [[Auditoria Snake DQN 2026-11-03]]; os itens 1, 2, 6, 10 e 17 e parte do 4, 7 e 9 foram feitos em 2026-11-05. Os próximos:
+- Rodar o lote 1 na AWS (`base`, `safe`, `g099n3`, `safe_g099n3`; 40 000 partidas cada) e replicar o melhor com 3 sementes ([[Treino na AWS]]).
 - Trazer o `best_model.pth` do servidor e avaliá-lo com `--seed 777`; criar uma linha de base heurística para medir o valor do DQN.
-- Experimentos contra o platô: γ = 0,99 com n-step, revisão da recompensa e features de armadilha (`espaço − comprimento`).
+- Revisão da recompensa e features de armadilha (`espaço − comprimento`); unificar ambiente e observação do `Test/` com o `Server_DQN`.
 
 Demais:
 
 1. Corrigir o veredito dos resolvedores do Sudoku (desempacotar a tupla e usar `checkVictory`).
 2. Calcular a dificuldade do Samurai sobre as 621 células reais e gravar `size`/`desafio` reais no log.
 3. Consertar o Server GA (imports relativos, `CMD`, volumes e `run_docker.sh`).
-4. Corrigir `carregar_testes()` para retornar `{}` e alinhar a opção 2 do `play.py` com a rede do GA (15 entradas).
+4. Alinhar a opção 2 do `play.py` com a rede do GA (15 entradas); o `carregar_testes()` já retorna `{}` desde 2026-11-05.
 5. Extrair o ambiente Snake (três cópias) para um módulo compartilhado.
 6. Tirar `matplotlib` e `ipython` de `SnakeGame/requirements.txt`, que nenhum script usa mais.
 7. Adicionar testes mínimos: `isValid`, `checkVictory`, `action_analysis` e `train_step` com um batch sintético.

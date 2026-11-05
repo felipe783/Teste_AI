@@ -32,7 +32,7 @@ idx = clock_wise.index(self.direction)
 
 ## action_analysis (versão Server DQN / Test)
 
-Simula cada uma das 3 ações e devolve `(colisão, fração de espaço alcançável, comida alcançável, cauda alcançável)`. O espaço é calculado por **BFS** (`_reachable_area`), tratando o corpo como parede, menos a cauda, que vai se mover.
+Simula cada uma das 3 ações e devolve `(colisão, fração de espaço alcançável, comida alcançável, cauda alcançável)`. O espaço é calculado por **BFS**, tratando o corpo como parede, menos a cauda, que vai se mover. No `Server_DQN`, desde 2026-11-05, o BFS (`_reachable`) roda numa grade de inteiros com `bytearray`, as 3 análises ficam em cache até o próximo movimento e o `play_step` reaproveita a análise da ação escolhida como `new_space`. São 3 BFS por passo em vez de 5, com resultados idênticos (testado contra a versão antiga). As cópias de `Test/` e `Server_GA/` continuam com o BFS antigo.
 
 ## Reward Shaping (versão Server DQN)
 

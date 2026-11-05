@@ -6,8 +6,8 @@ O arquivo `play.py` é o **Executor de Testes**: carrega o checkpoint escolhido,
 ## Escolha do Modelo
 
 ````python
-if escolha == 1:
-    MODEL_PATH = "Models/model.pth"          # DQN v2 (21 entradas)
+if escolha == 1:   # DQN v2 (21 entradas): best_model.pth se existir, senão model.pth (desde 2026-11-05)
+    MODEL_PATH = "Models/best_model.pth" if Path("Models/best_model.pth").exists() else "Models/model.pth"
 elif escolha == 2:
     MODEL_PATH = "Models/best_genetic.pth"   # GA
 ````
@@ -37,5 +37,6 @@ O `get_state` é o mesmo de 21 entradas do [[Server DQN]], e a rede é criada co
 
 > [!warning] Problemas
 > - **Opção 2 incompatível**: o GA salva redes de 15 entradas, e o `play.py` cria uma de 21, o que daria erro de *shape* no `load_state_dict`. Além disso, não há `best_genetic.pth` em `Test/Models` (verificado em 2026-10-17).
-> - **Primeiro uso**: sem `logs/testes.json`, `carregar_testes()` retorna `[]` (lista), e `obter_recorde_anterior()` chama `.values()` → `AttributeError`. Como `logs/` está no `.gitignore`, isso acontece em todo clone novo.
+> - **Corrigido em 2026-11-05 (lido, não executado):** sem `logs/testes.json`, `carregar_testes()` retornava `[]` e `obter_recorde_anterior()` quebrava com `AttributeError` em todo clone novo; agora retorna `{}`.
+> - O `get_state` daqui é uma cópia do [[Server DQN]], e o `Test/snake_gameai.py` não recebeu a otimização de BFS de 2026-11-05 (DQN-07).
 > - `MODEL_PATH` é relativo: rode de dentro de `SnakeGame/Test/`.
