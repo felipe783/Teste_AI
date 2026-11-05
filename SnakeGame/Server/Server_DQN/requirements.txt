@@ -1,2 +1,4 @@
-torch
-numpy
+# Versões verificadas em 2026-11-05 (testes e treino). No Docker o torch vem do índice CPU (ver Dockerfile);
+# fora dele: pip install --index-url https://download.pytorch.org/whl/cpu torch==2.13.0 && pip install -r requirements.txt
+torch==2.13.0
+numpy==2.5.2

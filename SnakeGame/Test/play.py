@@ -25,7 +25,9 @@ print("------------")
 escolha = int(input("Numero: "))
 
 if escolha == 1:
-    MODEL_PATH = "Models/model.pth"
+    # O best_model.pth (melhor média na avaliação gulosa do treino) quando existir; senão o último estado
+    MODEL_PATH = "Models/best_model.pth" if Path("Models/best_model.pth").exists() else "Models/model.pth"
+    print(f"Modelo: {MODEL_PATH}")
 elif escolha == 2:
     MODEL_PATH = "Models/best_genetic.pth"
 else:
@@ -106,7 +108,7 @@ def carregar_testes():
     LOG_DIR.mkdir(exist_ok=True)
 
     if not LOG_FILE.exists():
-        return []
+        return {}
 
     try:
         with LOG_FILE.open(encoding="utf-8") as arquivo:

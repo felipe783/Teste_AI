@@ -5,8 +5,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+# CPU de propósito: a rede tem ~6 mil parâmetros e o treino é ~13% do tempo (o resto é o BFS do ambiente,
+# medido em 2026-11-05), então GPU não acelera. O número de threads é definido pelo agent.py (--threads).
 DEVICE = torch.device("cpu")
-torch.set_num_threads(4)
 
 """Este arquivo cria a Rede Neural e compara o que a rede previu com o que realmente aconteceu (recompensa + estimativa do próximo estado) e ajusta os pesos para reduzir esse erro."""
 
@@ -54,7 +55,7 @@ class QTrainer:
         # Tensor
         state = torch.as_tensor(state, dtype=torch.float32, device=DEVICE)
         next_state = torch.as_tensor(next_state, dtype=torch.float32, device=DEVICE)
-        action = torch.as_tensor(action, dtype=torch.float32, device=DEVICE)
+        action = torch.as_tensor(action, device=DEVICE)  # one-hot (lote, 3) ou índices (lote,)
         reward = torch.as_tensor(reward, dtype=torch.float32, device=DEVICE)
 
         if state.ndim == 1:
@@ -65,7 +66,8 @@ class QTrainer:
             done = (done,)
 
         done_tensor = torch.as_tensor(done, dtype=torch.bool, device=DEVICE)
-        action_index = action.argmax(dim=1, keepdim=True)
+        action_index = (action.argmax(dim=1, keepdim=True) if action.ndim == 2
+                        else action.long().unsqueeze(1))
         current_q = self.model(state).gather(1, action_index).squeeze(1)
 
         # Double DQN: a policy escolhe a ação; a target a avalia.
